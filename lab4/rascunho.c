@@ -10,11 +10,9 @@ int poww(int base, int exp) {
 
 
 
-int strleng(char *string) {
-    char aux;
+int strleng(char* string) {
     int i = 0;
-    while (aux != '\0') {
-        aux = string[i];
+    while (*string++) {
         i++;
     }
     return i;
@@ -22,7 +20,7 @@ int strleng(char *string) {
 }
 
 void strcopy(char *string1, char *string2) {
-    for (int i=0; i<strleng(string1); i++) {
+    for (int i=0; i<strleng(string2); i++) {
         string1[i] = string2[i];
     }
 }
@@ -34,13 +32,12 @@ int chartoint(char string) {
 }
 
 char * check_base(char * number, char *base) {
-    if (number[0] == '0' && number[1] == 'x') {
+    if (number[1] == 'x') {
         strcopy(base,"hexadecimal");
         return base;
     }
     strcopy(base,"decimal");
     return base;
-
 }
 
 long long convert_valuell(char letter) {
@@ -175,11 +172,11 @@ int is_bigger(long long number) {
 }
 
 
-char* to_binary(char* snumber) {
+char* to_binary(char* snumber, char* answer) {
     /* 
     converts a decimal number to its binary representation
     */
-    char aux[50],answer[50];
+    char aux[50];
     int nnumber,q,r,i=0;
     nnumber = atoint(snumber);    
     while (nnumber > 0) {
@@ -195,29 +192,30 @@ char* to_binary(char* snumber) {
     return answer;
 }
 
-char* ato_decimal(char *number, char base[20]) {
+char* ato_decimal(char *number, char* base, char* sresult) {
     /* 
     converte um numero hexadecimal para decimal
     se for um numero decimal, retorna o próprio numero.
     */
-    char sresult[50];
     int nvalue, expoent = strleng(number)-3; //subtrai 2 devido ao "0x", depois subtrai mais um para acessar corretamente os indices
     char auxvalue[2];
     long long  nresult; 
 
-    if (base == 'd') {
-        return number;
+    if (base[0] == 'd') {
+        strcopy(sresult,number);
     }
-
-    for (int i=2; i<strleng(*number); i++) {
-        if (number[i] > 'A' && number[i] < 'Z') {
-            nvalue = convert_valueint(number[i]);
-            nresult += (nvalue)*poww(16,expoent);
-            expoent--;
+    else {
+        for (int i=2; i<strleng(number); i++) {
+            if (number[i] > 'A' && number[i] < 'Z') {
+                nvalue = convert_valueint(number[i]);
+                nresult += (nvalue)*poww(16,expoent);
+                expoent--;
+            }
+            char auxstring[50];
+            strcopy(sresult,intoa(nresult,auxstring));
+        }
     }
-    char auxstring[50];
-    strcopy(sresult,intoa(nresult,auxstring));
-    return sresult;
+    
 }
 
 
@@ -336,10 +334,10 @@ int * to_octal(char *string,char *base, int *vresult) {
     
     char * decvalue;
     long long c2value, nnumber; 
-    decvalue = ato_decimal(string,base);
+    ato_decimal(string,base,decvalue);
     c2value = ato_c2decimal(decvalue);
     unsigned int aux;
-    int vaux[50],i=0, vresult[50];
+    int vaux[50],i=0;
     
     nnumber = atoll(string);
     int diff = nnumber - 2147483647;
@@ -369,31 +367,35 @@ int main()
     char number[50];
 
     /* Read up to 20 bytes from the standard input into the str buffer */
-    int n = scanf("%s", number);
+    scanf("%s", number);
 
-    char base[20];; 
-    char * dresult, *bresult, *auxc2;
+    char base[20],dresult[40]; 
+    char *bresult, *auxc2;
     int *hexresult, *oresult;
 
     long long c2result;
     
     unsigned int invdresult;
     
+    
+    
+    
+    
     check_base(number,base);
-
-    dresult     =  ato_decimal(number, base);
+    //printf("%s\n", base);
+    ato_decimal(number, base, dresult);
     printf("%s\n", dresult);
-    bresult     = to_binary(number);
-    printf("%s\n", bresult);
-    auxc2       = ato_decimal(number, base);
-    c2result    = ato_c2decimal(auxc2);
-    printf("%lli\n", c2result);
-    invdresult  = change_endianness(number);
-    invdresult  = uito_decimal(invdresult); 
-    printf("%d\n", invdresult);
+    //to_binary(number,bresult);
+    //printf("%s\n", bresult);
+    //ato_decimal(number, base, auxc2);
+    //c2result    = ato_c2decimal(auxc2);
+    //printf("%lli\n", c2result);
+    //invdresult  = change_endianness(number);
+    //invdresult  = uito_decimal(invdresult); 
+    //printf("%d\n", invdresult);
     if (base[0] == 'h') {
         //write number
-        printf("%s\n", number);        
+    //    printf("%s\n", number);        
     }
     else { 
         //hexresult = to_c2hex(number,hexresult);
