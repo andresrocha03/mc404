@@ -82,15 +82,12 @@ int * chartoint(char string) {
     return result;
 }
 
-char * check_base(char * number) {
-    char base[20];
+void check_base(char * number, char* base) {
     if (number[0] == '0' && number[1] == 'x') {
-        strcpy(base,"hexadecimal");
-        return &base;
+        strcopy(base,"hexadecimal");
     }
     else {
-        strcpy(base,"decimal");
-        return &base;
+        strcopy(base,"decimal");
     }
 
 }
@@ -436,7 +433,7 @@ int main()
     /* Read up to 20 bytes from the standard input into the str buffer */
     int n = read(STDIN_FD, number, 32);
 
-    char base[20] = check_base(&number); 
+    char base[20];  
     char * dresult, *bresult, *auxc2;
     int *hexresult, *oresult;
 
@@ -444,6 +441,8 @@ int main()
     
     unsigned int invdresult;
     
+    check_base(&number, base);
+
     dresult     = ato_decimal(&number, base);
 
     bresult     = to_binary(&number);
