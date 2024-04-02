@@ -49,6 +49,15 @@ void _start()
 #define STDIN_FD  0
 #define STDOUT_FD 1
 
+int pow(int base, int exp) {
+    int result=1;
+    for (int i=0;i<exp;i++) {
+        result *= 16; 
+    }
+    return result;
+}
+
+
 
 int strlen(char *string) {
     char aux;
@@ -73,11 +82,23 @@ int * chartoint(char string) {
     return result;
 }
 
+char * check_base(char * number) {
+    char base[20];
+    if (number[0] == '0' && number[1] == 'x') {
+        strcpy(base,"hexadecimal");
+        return &base;
+    }
+    else {
+        strcpy(base,"decimal");
+        return &base;
+    }
 
+}
 
 int atoint(char *string) {
     int result, number[50];
     int i=0;
+    
     for (i=0; i<strlen(string); i++) {
         number[i] = string[i] - '0';
     }
@@ -92,6 +113,20 @@ int atoint(char *string) {
 long long atoll(char *string) {
     long long result, number[50];
     int i=0;
+    //hex number
+    char *base = checkbase(number); 
+    if (base[0] == 'h') {
+        for (i=2; i<strlen(string); i++) {
+            number[i] = convert_value(string[i]) - '0';
+        }
+        int len = sizeof(number)/sizeof(long long);
+        int exp = len-1;
+        for (i=0; i<len; i++) {
+            result += (number[i])*pow(16,exp); 
+        }    
+        return result;
+    }
+    //decimal number
     for (i=0; i<strlen(string); i++) {
         number[i] = string[i] - '0';
     }
@@ -113,29 +148,6 @@ char * intoa (int number){
     return string;
 }
 
-char * lltoa (long long number){
-    char string[50];
-    int i=0;
-    while (number>0) {
-        string[i] = number%10;
-        number = number/10;
-    }
-    return string;
-}
-
-
-char * check_base(char * number) {
-    char base[20];
-    if (number[0] == '0' && number[1] == 'x') {
-        strcpy(base,"hexadecimal");
-        return &base;
-    }
-    else {
-        strcpy(base,"decimal");
-        return &base;
-    }
-
-}
 
 char * convert_value(char letter) {
     char number[2] = ' ';
@@ -143,31 +155,58 @@ char * convert_value(char letter) {
         number[0] = '1';
         number[1] = '0';
     }
-    if (letter == 'B') {
+    else if (letter == 'B') {
         number[0] = '1';
         number[1] = '1';
     }
-    if (letter == 'C') {
+    else if (letter == 'C') {
         number[0] = '1';
         number[1] = '2';
     }
-    if (letter == 'D') {
+    else if (letter == 'D') {
         number[0] = '1';
         number[1] = '3';
     }
-
-    if (letter == 'E') {
+    else if (letter == 'E') {
         number[0] = '1';
         number[1] = '4';
     }
-    if (letter == 'F') {
+    else if (letter == 'F') {
         number[0] = '1';
         number[1] = '5';
     }
-
     return number;
 }
 
+
+char reconvert_value(int number) {
+    char letter = ' ';
+    if (number == 10) {
+        letter = 'A';
+    }
+    else if (number == 11) {
+        letter = 'B';
+    }
+    else if (number == 12) {
+        letter = 'C';
+        
+    }
+    else if (number == 13) {
+        letter = 'D';
+        
+    }
+    else if (number == 14) {
+        letter = 'E';
+        
+    }
+    else if (number == 15) {
+        letter = 'F';
+    }
+    else {
+        letter = number + '0'
+    }
+    return letter;
+}
 
 int char_is_bigger(char *number) {
     /*
@@ -175,7 +214,6 @@ int char_is_bigger(char *number) {
     */
 
     char limit[] = {'2','1','4','7','4','8','3','6','4','7'};
-    
     for (int i=0; i<strlen(number); i++) {
         if (number[i] > limit[i]) {
             return 1;           
@@ -218,7 +256,7 @@ char* to_binary(char* snumber) {
     return answer;
 }
 
-char *to_decimal(char *number, char base[20]) {
+char* ato_decimal(char *number, char base[20]) {
     /* 
     converte um numero hexadecimal para decimal
     se for um numero decimal, retorna o próprio numero.
@@ -248,12 +286,11 @@ char *to_decimal(char *number, char base[20]) {
 }
 
 
-long long to_c2decimal(char *number) {
+long long ato_c2decimal(char *number) {
     /* 
     converte um número em complemento de 2 para decimal
     */
     
-     
     long long diff, aux, result;
     if (char_is_bigger(number)) {
         aux = atoll(number);
@@ -266,37 +303,129 @@ long long to_c2decimal(char *number) {
     return atoll;
 }
 
-char *change_endianness(char *number) {
-    /* 
-    converte um numero hexadecimal para decimal
-    se for um numero decimal, retorna o próprio numero.
-    */
-    char sresult[50];
-    int nvalue, expoent = strlen(number)-3; //subtrai 2 devido ao "0x", depois subtrai mais um para acessar corretamente os indices
-    char auxvalue[2];
-    long long  nresult; 
-
-    for (int i=2; i<strlen(*number); i++) {
-        if (number[i] > 'A' && number[i] < 'Z') {
-            strcpy(auxvalue,*convert_value(number[i]));
-        }
-        else { 
-            strcpy(auxvalue,number[i]);
-        }
-        nvalue = chartoint(auxvalue);
-        nresult += (nvalue)*pow(16,expoent);
-        expoent--;
+unsigned int uito_decimal(unsigned int number) {
+    unsigned int result;
+    int aux[50], i=0;
+    while (number>0) {
+        aux[i] = number%10;
+        number = number/10;
+        i++;
     }
-    strcpy(sresult,intoa(nresult));
-    return &sresult;
+    int exp = i-1;
+    for (int j=0; j<i; j++) {
+        result = aux[i]*pow(16,exp);
+        exp--;
+    }
+    return result;
 }
 
-char* to_hexadecimal() {
+unsigned int change_endianness(char *number) {
+    /* 
+    inverter bytes do numero recebido, devolver numero com endianess trocado
+    */
+    long long llnumber;
+    long long leftmost_byte, leftmiddle_byte, rightmiddle_byte, rightmost_byte;
+    
+    llnumber = atoll(number);
 
+    leftmost_byte    = (llnumber & 0x000000FF) >> 00;
+    leftmiddle_byte  = (llnumber & 0x0000FF00) >> 8;
+    rightmiddle_byte = (llnumber & 0x00FF0000) >> 16;
+    rightmost_byte   = (llnumber & 0xFF000000) >> 24; 
+    
+    leftmost_byte <<= 24;
+    leftmiddle_byte <<= 16;
+    rightmiddle_byte <<= 8;
+    rightmost_byte <<= 0;
+
+    long long result = (leftmost_byte | leftmiddle_byte | 
+                        rightmiddle_byte | rightmost_byte);
+    return result;
+}  
+
+
+int * to_c2hex(char* string) {
+    int diff, vaux[50], i=0, vresult[50];
+    unsigned int aux=0; 
+    long long nnumber;
+    //fazer diff = number - 2147483647
+    //fazer aux = diff + 2147483647
+    //converter aux para hex
+
+    nnumber = atoll(string);
+    diff = nnumber - 2147483647;
+    aux = diff + 2147483647;
+    
+    while (aux > 0) {
+        vaux[i] = aux%16;
+        aux /= 16;
+        i++;
+    }
+
+    //inverter resposta
+    int k = 0;
+    for (int j=i-1; j>=0; j--) {
+        vresult[k] = reconvert_value(vaux[i]);
+        k++;
+    }
+    return vresult;    
 }
 
-char* to_octal() {
+int * to_octal(char *string,char *base) {
+    if (base[0]== 'd') {
 
+        unsigned int aux, diff;
+        int vaux[50],i=0, vresult[50];
+        long long nnumber;
+    
+
+        nnumber = atoll(string);
+        diff = nnumber - 2147483647;
+        aux = diff + 2147483647;
+
+        aux = atoll(string);
+        while (aux > 0) {
+            vaux[i] = aux%8;
+            aux /= 8;
+            i++;
+        }
+
+        //inverter resposta
+        int k = 0;
+        for (int j=i-1; j>=0; j--) {
+            vresult[k] = vaux[i];
+            k++;
+        }
+        return vresult;
+    }
+    
+    char * decvalue;
+    long long c2value, nnumber; 
+    decvalue = to_decimal(string,base);
+    c2value = ato_c2decimal(string);
+    unsigned int aux;
+    int vaux[50],i=0, vresult[50];
+    
+    nnumber = atoll(string);
+    int diff = nnumber - 2147483647;
+    aux = diff + 2147483647;
+
+    while (aux > 0) {
+        vaux[i] = aux%8;
+        aux /= 8;
+        i++;
+    }
+
+    //inverter resposta
+    int k = 0;
+    for (int j=i-1; j>=0; j--) {
+        vresult[k] = vaux[i];
+        k++;
+    }
+    return vresult;
+
+
+    
 }
 
 
@@ -308,46 +437,36 @@ int main()
     int n = read(STDIN_FD, number, 32);
 
     char base[20] = check_base(&number); 
-    char * dresult, *bresult;
+    char * dresult, *bresult, *auxc2;
+    int *hexresult, *oresult;
+
     long long c2result;
-    long long invdresult;
     
-    dresult     = to_decimal(&number, base);
+    unsigned int invdresult;
+    
+    dresult     = ato_decimal(&number, base);
+
     bresult     = to_binary(&number);
-    c2result    = to_c2decimal(&number);
-    invdresult = change_endianness(&number);
-    to_hexa(&number);
-    to_octal(&number);
+
+    auxc2       = ato_decimal(&number, base);
+    c2result    = ato_c2decimal(auxc2);
+
+    invdresult  = change_endianness(&number);
+    invdresult  = uito_decimal(invdresult); 
+    
+    if (base[0] == 'h') {
+        //write number
+        
+    }
+    else { 
+        hexresult = to_c2hex(number);
+    }
+    
+
+    oresult = to_octal(&number,);
 
     /* Write n bytes from the str buffer to the standard output */
     write(STDOUT_FD, number, n);
     return 0;
 }
 
-
-
-
-
-/*
-char *to_decimal(char *number, char base[20]) {
-    char sresult[50];
-    int nvalue, nresult, expoent = strlen(number)-3; //subtrai 2 devido ao "0x", depois subtrai mais um para acessar corretamente os indices
-    char auxvalue[2];
-    if (base == 'd') {
-        return number;
-    }
-    for (int i=2; i<strlen(*number); i++) {
-        if (number[i] > 'A' && number[i] < 'Z') {
-            strcpy(auxvalue,*convert_value(number[i]));
-        }
-        else { 
-            strcpy(auxvalue,number[i]);
-        }
-        nvalue = chartoint(auxvalue);
-        nresult += (nvalue)*pow(16,expoent);
-        expoent--;
-    }
-    strcpy(sresult,intoa(nresult));
-    return &sresult;
-}
-*/
