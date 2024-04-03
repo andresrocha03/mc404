@@ -111,6 +111,11 @@ int atoint(char *string)
 
 long long atoll(char *string)
 {
+    /*
+    recebe um número no formato de string na base decimal ou hexadecimal
+    devolve um numero long long decimal
+    */
+
     long long result = 0, number[50];
     int i = 0;
     char base, sign;
@@ -120,11 +125,11 @@ long long atoll(char *string)
     // hex number
     if (base == 'h')
     {
-        //printf("number: %s", string);
+        // printf("number: %s", string);
         for (i = 2; i < strleng(string); i++)
         {
             number[i] = convert_valuell(string[i]);
-            // printf("number vector: %lli\n",number[i]);
+            printf("number vector: %lli\n", number[i]);
         }
         int len = i;
         int exp = len - 1;
@@ -132,11 +137,12 @@ long long atoll(char *string)
         {
             result += (number[i]) * poww(16, exp);
         }
+
         return result;
     }
 
     // decimal number
-   // printf("decimal number\n");
+    // printf("decimal number\n");
     int k, j = 0;
     if (sign == 'p')
         k = 0;
@@ -144,16 +150,16 @@ long long atoll(char *string)
         k = 1;
     for (i = k; i < strleng(string); i++)
     {
-        number[j] = string[i] - '0';     
-        //printf("number vector: %lli\n", number[j]);
+        number[j] = string[i] - '0';
+        // printf("number vector: %lli\n", number[j]);
         j++;
     }
-   // printf("i: %d\n",i);
-    int len = i-1;
+    // printf("i: %d\n",i);
+    int len = j;
     int exp = len - 1;
     for (i = 0; i < len; i++)
     {
-        //printf("number vector: %lli\n", number[i]);
+        // printf("number vector: %lli\n", number[i]);
         result += (number[i]) * poww(10, exp);
         exp--;
     }
@@ -251,6 +257,37 @@ int char_is_bigger(char *number)
     return 0;
 }
 
+int char_is_lower(char *number)
+{
+    /*
+    check if an number is lower than -2147483648
+    */
+
+    char limit[] = {'2', '1', '4', '7', '4', '8', '3', '6', '4', '8'};
+    if (strleng(number) > 10)
+    {
+        return 1;
+    }
+    if (strleng(number) == 10)
+    {
+        for (int i = 1; i < strleng(number); i++)
+        {
+            if (number[i] > limit[i])
+            {
+                return 1;
+            }
+            else if (number[i] < limit[i])
+            {
+                return 0;
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+
 int is_bigger(long long number)
 {
     /*
@@ -323,13 +360,13 @@ char *ato_decimal(char *number, char base, char *sresult)
 long long ato_c2decimal(char *number)
 {
     /*
-    converte um número decimal em complemento de 2 para decimal
+    converte um número decimal para complemento de 2
     */
     // printf("NUMBER: %s\n", number);
-   // printf("ENTREI NO C2\n");
+    // printf("ENTREI NO C2\n");
     char sign = check_sign(number);
 
-    //printf("sign %c\n", sign);
+    // printf("sign %c\n", sign);
 
     long long diff, aux, result;
     if (char_is_bigger(number) && sign == 'p')
@@ -341,13 +378,50 @@ long long ato_c2decimal(char *number)
         result = -2147483648 + diff;
         return result;
     }
-    else if (sign == 'n')
+    else if (char_is_lower(number) && sign == 'n')
     {
         aux = atoll(number);
         //printf("aux: %lli\n", aux);
         diff = aux + 2147483648;
         result = 2147483648 + diff;
-        //printf("result\n: %lli", result);
+        //printf("result: %lli\n", result);
+        //printf("--------------------\n");
+        return result;
+    }
+
+    result = atoll(number);
+    return result;
+}
+
+long long c2to_decimal(char *number)
+{
+    /*
+    converte um número decimal para complemento de 2
+    */
+    // printf("NUMBER: %s\n", number);
+    // printf("ENTREI NO C2\n");
+    char sign = check_sign(number);
+
+    // printf("sign %c\n", sign);
+
+    long long diff, aux, result;
+    if (char_is_bigger(number) && sign == 'p')
+    {
+        // printf("ISBIGGER\n");
+        aux = atoll(number);
+        diff = aux - 2147483648;
+        // printf("DIFF: %lli", diff);
+        result = -2147483648 + diff;
+        return result;
+    }
+    else 
+    {
+        aux = atoll(number);
+        //printf("aux: %lli\n", aux);
+        diff = aux + 2147483648;
+        result = 2147483648 + diff;
+        //printf("result: %lli\n", result);
+        //printf("--------------------\n");
         return result;
     }
 
@@ -374,48 +448,14 @@ unsigned int uito_decimal(unsigned int number)
     return result;
 }
 
-unsigned int change_endianness(char *number)
+void to_c2hex(long long number, char *vresult)
 {
-    /*
-    inverter bytes do numero recebido, devolver numero com endianess trocado
-    */
-    long long llnumber;
-    long long leftmost_byte, leftmiddle_byte, rightmiddle_byte, rightmost_byte;
+    int vaux[50], i = 0;
 
-    llnumber = atoll(number);
-
-    leftmost_byte = (llnumber & 0x000000FF) >> 00;
-    leftmiddle_byte = (llnumber & 0x0000FF00) >> 8;
-    rightmiddle_byte = (llnumber & 0x00FF0000) >> 16;
-    rightmost_byte = (llnumber & 0xFF000000) >> 24;
-
-    leftmost_byte <<= 24;
-    leftmiddle_byte <<= 16;
-    rightmiddle_byte <<= 8;
-    rightmost_byte <<= 0;
-
-    long long result = (leftmost_byte | leftmiddle_byte |
-                        rightmiddle_byte | rightmost_byte);
-    return result;
-}
-
-int *to_c2hex(char *string, int *vresult)
-{
-    int diff, vaux[50], i = 0;
-    unsigned int aux = 0;
-    long long nnumber;
-    // fazer diff = number - 2147483647
-    // fazer aux = diff + 2147483647
-    // converter aux para hex
-
-    nnumber = atoll(string);
-    diff = nnumber - 2147483647;
-    aux = diff + 2147483647;
-
-    while (aux > 0)
+    while (number > 0)
     {
-        vaux[i] = aux % 16;
-        aux /= 16;
+        vaux[i] = number % 16;
+        number /= 16;
         i++;
     }
 
@@ -426,9 +466,82 @@ int *to_c2hex(char *string, int *vresult)
         vresult[k] = reconvert_value(vaux[i]);
         k++;
     }
-    return vresult;
 }
 
+long long change_endianness(long long number) {
+    //
+    //receber um unsigned int e mudar seu endianness
+    //
+    char binary[33];
+
+    //printf("im in\n");
+    
+    to_binary(number,binary);
+    //printf("number: %lli\n", number);
+    //printf("binary: %s\n", binary);
+
+    //completar 32 bits
+    char aux[33];
+    int j;
+    if (strleng(binary)<32) {
+        int limit = 32-strleng(binary);
+        for (int i=0; i<limit; i++) {
+            aux[i] = '0';
+        }
+        j = limit;
+        for (int i=0; i<strleng(binary); i++) {
+            aux[j] = binary[i];
+            j++;
+        }
+    }
+    else {
+        strcopy(aux,binary);
+    }
+    aux[32] = '\0';
+    //printf("bits completos: %s\n", aux);
+    
+    //inverter bytes
+    int ini = 24, fim = 31;
+    j = 0; 
+    char byte[9];
+    int b=0;
+    for (int k=0; k<4; k++) {
+        for (int i=ini; i<=fim; i++) {
+            binary[j] = aux[i];
+            //byte[b]   = aux[i];
+            j++;
+            //b++;
+            //printf("i: %d ", i);
+        }   
+        //byte[8] = '\0';
+        //printf("     byte: %s\n", byte);
+        //b = 0;
+        ini -= 8;
+        fim -= 8;
+    }
+    binary[32] = '\0';
+    //printf("bits invertidos: %s\n", binary);
+
+    //converter para decimal
+    long long exp = 31;
+    long long result=0;
+    long long bit;
+    for (int i=0; i<strleng(binary); i++) {
+        bit = binary[i] - '0';
+        //printf("-------------------------\n");
+        //printf(" bit: %lli |", bit);
+        //printf(" exp: %lli", exp);
+        //printf(" poww: %lli", poww(2,exp));
+        result += bit*poww(2,exp);
+        //printf("result: %lli\n", result);
+        //printf("-------------------------\n");
+        exp--;
+    }
+    //printf("result: %lli\n", result);
+    return result;
+}
+
+/*
 int *to_octal(char *string, char base, int *vresult)
 {
     if (base == 'd')
@@ -487,6 +600,7 @@ int *to_octal(char *string, char base, int *vresult)
     }
     return vresult;
 }
+*/
 
 int main()
 {
@@ -495,48 +609,90 @@ int main()
     /* Read up to 20 bytes from the standard input into the str buffer */
     scanf("%s", number);
 
-    char base, dresult[40], bresult[100];
-    int *hexresult, *oresult;
+    char base, dresult[100], bresult[100], hexresult[100];
+    int *oresult;
 
-    long long c2result;
+    long long c2dresult, c2result;
 
-    unsigned int invdresult;
+    long long invdresult=0;
 
     base = check_base(number);
 
-    printf("%c\n", base);
+    // converter hexadecimal para um numero decimal nao assinado
     ato_decimal(number, base, dresult);
-    printf("dresult: %s\n", dresult);
 
+    // converter o numero decimal para a representacao em unsigned
+    c2dresult = c2to_decimal(dresult);
+
+    // converter o numero decimal para o numero binario
+    to_binary(c2dresult, bresult);
+
+    // converter para complemento de 2
     c2result = ato_c2decimal(dresult);
-    printf("%lli\n", c2result);
 
-    to_binary(c2result, bresult);
-    printf("%s\n", bresult);
-
-    if (base == 'd') {
-        hexresult = to_c2hex(number,hexresult);
-    }
-    invdresult  = change_endianness(number);
-    invdresult  = uito_decimal(invdresult);    
-
-    printf("%d\n", invdresult);
-    if (base == 'h')
-    {
-        // write number
-        //    printf("%s\n", number);
-    }
-    else
-    {
-        // hexresult = to_c2hex(number,hexresult);
-        // printf("%d\n", hexresult);
-    }
-
-    // oresult = to_octal(number,base,oersult);
+    //change endianness
+    printf("c2drseult: %lli\n", c2dresult);
+    invdresult = change_endianness(c2dresult);
+    
+    
+    // printf("%c\n", base);
+    //printf("dresult: %s\n", dresult);
+    printf("0b%s\n", bresult);
+    printf("c2_result: %lli\n", c2result);
+    printf("change endianness: %lli\n", invdresult);
 
     return 0;
 }
 
 
+//if (base == 'h')
+    //{
+        // write number
+        //    printf("%s\n", number);
+  //  }
+    //else
+    //{
+        // hexresult = to_c2hex(number,hexresult);
+        // printf("%d\n", hexresult);
+    //}
+
+    // oresult = to_octal(number,base,oersult);
 
 
+    //invdresult  = uito_decimal(invdresult);
+    //to_c2hex(c2result, hexresult);
+    //uiresult = decimal_to_unsigned(dresult);
+    
+/*
+unsigned int change_endianness(long long llnumber)
+{
+    // inverter bytes do numero recebido, devolver numero com endianess trocado
+    // long long llnumber;
+    long long leftmost_byte, leftmiddle_byte, rightmiddle_byte, rightmost_byte;
+
+    printf("entrei\n");
+    printf("number: %lli\n", llnumber);
+
+    printf("number: %lli\n", llnumber);
+    // llnumber = atoll(number);
+    printf("llnumber: %lli\n", llnumber);
+
+    leftmost_byte = (llnumber & 0x000000FF) >> 00;
+    // printf("left most: %lli\n", leftmost_byte);
+    leftmiddle_byte = (llnumber & 0x0000FF00) >> 8;
+    rightmiddle_byte = (llnumber & 0x00FF0000) >> 16;
+    rightmost_byte = (llnumber & 0xFF000000) >> 24;
+
+    leftmost_byte <<= 24;
+    leftmiddle_byte <<= 16;
+    rightmiddle_byte <<= 8;
+    rightmost_byte <<= 0;
+
+    long long result = (leftmost_byte | leftmiddle_byte |
+                        rightmiddle_byte | rightmost_byte);
+    return result;
+}
+*/
+
+// 1110000010100110000100000000000
+// 1110000010100110000000000000000
