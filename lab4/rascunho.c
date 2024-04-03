@@ -1,9 +1,9 @@
 #include <stdio.h>
 
-int poww(int base, int exp) {
-    int result=1;
+long long poww(long long base, long long exp) {
+    long long result=1;
     for (int i=0;i<exp;i++) {
-        result *= 16; 
+        result *= base; 
     }
     return result;
 }
@@ -31,6 +31,18 @@ int chartoint(char string) {
     result = string - '0';
     return result;
 }
+
+char  check_sign(char * number) {
+    char sign;
+    if (number[0] == '-') {
+        sign = 'n';
+        return sign;
+    }
+    char aux[20]; 
+    sign = 'p';
+    return sign;
+}
+
 
 char  check_base(char * number) {
     char base;
@@ -83,15 +95,18 @@ int atoint(char *string) {
 }
 
 long long atoll(char *string) {
-    long long result, number[50];
+    long long result=0, number[50];
     int i=0;
-    //hex number
-    char base;
+    char base, sign;
+    
     base = check_base(string); 
+    sign = check_sign(string);
+    //hex number
     if (base == 'h') {
+        printf("number: %s", string);
         for (i=2; i<strleng(string); i++) {
             number[i] = convert_valuell(string[i]);
-            printf("number vector: %lli\n",number[i]);
+            //printf("number vector: %lli\n",number[i]);
         }
         int len = i;
         int exp = len-1;
@@ -100,15 +115,22 @@ long long atoll(char *string) {
         }    
         return result;
     }
+
     //decimal number
-    for (i=0; i<strleng(string); i++) {
+    int k;
+    if (sign == 'p') k = 0;
+    else k = 1;
+    for (i=k; i<strleng(string); i++) {
         number[i] = string[i] - '0';
     }
-    int len = sizeof(number)/sizeof(int);
+    int len = i;
     int exp = len-1;
     for (i=0; i<len; i++) {
+       //printf("number vector: %lli\n",number[i]);
        result += (number[i])*poww(10,exp); 
+       exp--;
     }
+    if (k==1) result *= -1; 
     return result;
 }
 
@@ -198,28 +220,26 @@ int is_bigger(long long number) {
 }
 
 
-char* to_binary(char* snumber, char* answer) {
+void to_binary(long long number, char* answer) {
     /* 
     converts a decimal number to its binary representation
     */
-    char aux[50];
-    int nnumber,q,r,i=0;
+    char aux[100];
+    int q,r=0,i=0;
 
-    //printf("AQUIIII\n");
-    nnumber = atoint(snumber);
-    //printf("PASSEI\n");    
-    //printf("NNUMBER: %d\n", nnumber);
-    while (nnumber > 0) {
-        aux[i] = nnumber%2 + '0';
-        nnumber /= 2;
+    while (number > 0) {
+        aux[i] = number%2 + '0';
+        //printf("aux[i]: %c\n", aux[i]);
+        number /= 2;
         i++;
     }
-
+    aux[i] = '\0';
     //inverter resposta
     for (int j=strleng(aux)-1; j>=0; j--) {
-        answer[i] = aux[j]; 
+        answer[r] = aux[j]; 
+        r++;
     }
-    return answer;
+    answer[r] = '\0';
 }
 
 char* ato_decimal(char *number, char base, char* sresult) {
@@ -237,11 +257,11 @@ char* ato_decimal(char *number, char base, char* sresult) {
     }
     else {
         for (int i=2; i<strleng(number); i++) {
-            nvalue = convert_valueint(number[i]);
+            nvalue = convert_valuell(number[i]);
             //printf("dec: %d|",nvalue);
             //printf("exp: %d|",exp);
-            //printf("poww: %d|",poww(16,exp));
-            //printf("conta: %d\n",nvalue*poww(16,exp));
+            //printf("poww: %lli|",poww(16,exp));
+            //printf("conta: %lli\n",nvalue*poww(16,exp));
             nresult += (nvalue)*poww(16,exp);
             exp--;
         }
@@ -257,18 +277,23 @@ long long ato_c2decimal(char *number) {
     converte um número decimal em complemento de 2 para decimal
     */
     //printf("NUMBER: %s\n", number);
+    char sign = check_sign;
+
     long long diff, aux, result;
-    if (char_is_bigger(number)) {
-        printf("ISBIGGER\n");
+    if (char_is_bigger(number) && sign =='p') {
+        //printf("ISBIGGER\n");
         aux = atoll(number);
         diff = aux - 2147483648;
+        //printf("DIFF: %lli", diff);
         result = -2147483648 + diff;
         return result;
 
     }    
+    else if (sign=='n') {
+        
+    }
 
     long long answer = atoll(number);
-    printf("ANSWER: %lli\n", answer);
     return answer;
 }
 
@@ -405,8 +430,7 @@ int main()
     /* Read up to 20 bytes from the standard input into the str buffer */
     scanf("%s", number);
 
-    char base, dresult[40]; 
-    char *bresult;
+    char base, dresult[40], bresult[100]; 
     int *hexresult, *oresult;
 
     long long c2result;
@@ -415,14 +439,17 @@ int main()
     
     
     base = check_base(number);
+
     printf("%c\n", base);
     ato_decimal(number, base, dresult);
     printf("dresult: %s\n", dresult);
 
     c2result = ato_c2decimal(dresult);
     printf("%lli\n", c2result);
-    to_binary(number,bresult);
+
+    to_binary(c2result,bresult);
     printf("%s\n", bresult);
+    
     //c2result    = ato_c2decimal(auxc2);
     //printf("%lli\n", c2result);
     //invdresult  = change_endianness(number);
