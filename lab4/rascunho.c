@@ -514,8 +514,12 @@ int main()
     to_binary(c2result, bresult);
     printf("%s\n", bresult);
 
+    if (base == 'd') {
+        hexresult = to_c2hex(number,hexresult);
+    }
     invdresult  = change_endianness(number);
-    invdresult  = uito_decimal(invdresult);
+    invdresult  = uito_decimal(invdresult);    
+
     printf("%d\n", invdresult);
     if (base == 'h')
     {
@@ -532,6 +536,7 @@ int main()
 
     return 0;
 }
+
 
 
 
