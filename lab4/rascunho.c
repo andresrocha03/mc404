@@ -175,21 +175,21 @@ char *lltoa(long long number, char *string)
     //printf("number: %lli\n",number);
     while (number > 0) {
         stringaux[i] = number % 10 + '0';
-        //printf("number10: %lli\n",number%10);
+        // printf("number10: %lli\n",number%10);
         number = number / 10;
         i++;
     }
     stringaux[i] = '\0';
-    //printf("STRINGaux: %s\n",stringaux);
+    // printf("STRINGaux: %s\n",stringaux);
     // inverter resposta
     int k = 0;
     for (int j = i - 1; j >= 0; j--) {
-        //printf("STRINGauxchar: %c\n",stringaux[j]);
+        // printf("STRINGauxchar: %c\n",stringaux[j]);
         string[k] = stringaux[j];
         k++;
     }
     string[k] = '\0';
-    //printf("STRING: %s",string);
+    // printf("STRING: %s\n",string);
     return string;
 }
 
@@ -555,17 +555,29 @@ void to_octal(long long number, char *vresult)
 
 int main()
 {
-    char number[50];
+    char number[40];
 
     /* Read up to 20 bytes from the standard input into the str buffer */
     scanf("%s", number);
 
-    char base, dresult[100], bresult[100], hexresult[100], oresult[100],resposta1[100], resposta2[100], resposta3[100], aux[100];
-
+    char base = 'a'; 
+    char dresult[40], bresult[40], hexresult[40], oresult[40],resposta1[40], resposta2[40], resposta3[40], aux[40];
+    char init[40] = {'a','a','a','a','\0'};
     long long c2dresult, c2result;
 
     long long invdresult=0;
 
+    int j = 2;
+
+    //inicializar
+    strcopy(dresult, init);
+    strcopy(bresult, init);
+    strcopy(hexresult, init);
+    strcopy(oresult, init);
+    strcopy(resposta1, init);
+    strcopy(resposta2, init);
+    strcopy(resposta3, init);
+    strcopy(aux, init);
     base = check_base(number);
 
     // converter hexadecimal para um numero decimal nao assinado
@@ -578,7 +590,7 @@ int main()
     to_binary(c2dresult, bresult);
     resposta1[0] = '0';
     resposta1[1] = 'b';
-    int j = 2;
+   
     for (int i=0; i<strleng(bresult); i++) {
         resposta1[j] = bresult[i];
         j++;
@@ -596,14 +608,18 @@ int main()
 
     //valor em octal
     to_octal(c2dresult, oresult);
-    if (c2result < 0) {
-        lltoa(-c2result,aux);
-        resposta2[0] = '-';
-        j=1;
-        for (int i=0; i<strleng(aux); i++) {
+   
+    if (c2result < 0) {         
+         lltoa(-c2result,aux);
+         resposta2[0] = '-';
+         j=1;
+        //  printf("aux: %s\n",aux);
+         for (int i=0; i<strleng(aux); i++) {
             resposta2[j] = aux[i];
             j++;
+            // printf("aux: %s\n",aux);
         }
+    //     resposta2[j] = '\0';
     }
     else if (c2result >= 0) {
         lltoa(c2result, resposta2);
@@ -612,11 +628,11 @@ int main()
     //printf("BUG\n");
     // printf("%c\n", base);
     // printf("dresult: %s\n", dresult);
-    // printf("%s\n", resposta1);
-    // printf("%s\n", resposta2);
-    // printf("%s\n", resposta3);
-    // printf("%s\n", hexresult);
-    // printf("%s\n", oresult);
+    printf("%s\n", resposta1);
+    printf("%s\n", resposta2);
+    printf("%s\n", resposta3);
+    printf("%s\n", hexresult);
+    printf("%s\n", oresult);
     return 0;
 }
 
