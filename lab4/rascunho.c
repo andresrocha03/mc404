@@ -406,25 +406,6 @@ long long c2to_decimal(char *number)
     return result;
 }
 
-unsigned int uito_decimal(unsigned int number)
-{
-    unsigned int result;
-    int aux[50], i = 0;
-    while (number > 0)
-    {
-        aux[i] = number % 10;
-        number = number / 10;
-        i++;
-    }
-    int exp = i - 1;
-    for (int j = 0; j < i; j++)
-    {
-        result = aux[i] * poww(16, exp);
-        exp--;
-    }
-    return result;
-}
-
 long long change_endianness(long long number) {
     //
     //receber um unsigned int e mudar seu endianness
