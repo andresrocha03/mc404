@@ -1,47 +1,3 @@
-// int read(int __fd, const void *__buf, int __n){
-//     int ret_val;
-//   __asm__ __volatile__(
-//     "mv a0, %1           # file descriptor\n"
-//     "mv a1, %2           # buffer \n"
-//     "mv a2, %3           # size \n"
-//     "li a7, 63           # syscall write code (63) \n"
-//     "ecall               # invoke syscall \n"
-//     "mv %0, a0           # move return value to ret_val\n"
-//     : "=r"(ret_val)  // Output list
-//     : "r"(__fd), "r"(__buf), "r"(__n)    // Input list
-//     : "a0", "a1", "a2", "a7"
-//   );
-//   return ret_val;
-// }
-
-// void write(int __fd, const void *__buf, int __n)
-// {
-//   __asm__ __volatile__(
-//     "mv a0, %0           # file descriptor\n"
-//     "mv a1, %1           # buffer \n"
-//     "mv a2, %2           # size \n"
-//     "li a7, 64           # syscall write (64) \n"
-//     "ecall"
-//     :   // Output list
-//     :"r"(__fd), "r"(__buf), "r"(__n)    // Input list
-//     : "a0", "a1", "a2", "a7"
-//   );
-// }
-
-// void exit(int code)
-// {
-//   __asm__ __volatile__(
-//     "mv a0, %0           # return code\n"
-//     "li a7, 93           # syscall exit (64) \n"
-//     "ecall"
-//     :   // Output list
-//     :"r"(code)    // Input list
-//     : "a0", "a7"
-//   );
-// }
-
-// #define STDIN_FD  0
-// #define STDOUT_FD 1
 #include <stdio.h>
 
 long long poww(long long base, long long exp)
@@ -70,13 +26,6 @@ void strcopy(char *string1, char *string2)
     {
         string1[i] = string2[i];
     }
-}
-
-int chartoint(char string)
-{
-    int result;
-    result = string - '0';
-    return result;
 }
 
 char check_sign(char *number)
@@ -169,11 +118,10 @@ long long atoll(char *string)
     // hex number
     if (base == 'h')
     {
-        // printf("number: %s", string);
         for (i = 2; i < strleng(string); i++)
         {
             number[i] = convert_valuell(string[i]);
-            // printf("number vector: %lli\n", number[i]);
+            printf("number vector: %lli\n", number[i]);
         }
         int len = i;
         int exp = len - 1;
@@ -186,7 +134,6 @@ long long atoll(char *string)
     }
 
     // decimal number
-    // printf("decimal number\n");
     int k, j = 0;
     if (sign == 'p')
         k = 0;
@@ -195,15 +142,12 @@ long long atoll(char *string)
     for (i = k; i < strleng(string); i++)
     {
         number[j] = string[i] - '0';
-        // printf("number vector: %lli\n", number[j]);
         j++;
     }
-    // printf("i: %d\n",i);
     int len = j;
     int exp = len - 1;
     for (i = 0; i < len; i++)
     {
-        // printf("number vector: %lli\n", number[i]);
         result += (number[i]) * poww(10, exp);
         exp--;
     }
@@ -212,28 +156,23 @@ long long atoll(char *string)
     return result;
 }
 
-char *lltoa(long number, char *string)
+char *lltoa(long long number, char *string)
 {
     int i = 0;
     char stringaux[50];
-    //printf("number: %lli\n",number);
     while (number > 0) {
-        stringaux[i] = (number - number/10) + '0';
-        // printf("number10: %lli\n",number%10);
+        stringaux[i] = number % 10 + '0';
         number = number / 10;
         i++;
     }
     stringaux[i] = '\0';
-    // printf("STRINGaux: %s\n",stringaux);
     // inverter resposta
     int k = 0;
     for (int j = i - 1; j >= 0; j--) {
-        // printf("STRINGauxchar: %c\n",stringaux[j]);
         string[k] = stringaux[j];
         k++;
     }
     string[k] = '\0';
-    // printf("STRING: %s\n",string);
     return string;
 }
 
@@ -351,7 +290,7 @@ char *ato_decimal(char *number, char base, char *sresult)
     */
     int nvalue, exp = strleng(number) - 3; // subtrai 2 devido ao "0x", depois subtrai mais um para acessar corretamente os indices
     char auxvalue[2];
-    long nresult = 0;
+    long long nresult = 0;
     char auxstring[50];
 
     if (base == 'd')
@@ -363,10 +302,6 @@ char *ato_decimal(char *number, char base, char *sresult)
         for (int i = 2; i < strleng(number); i++)
         {
             nvalue = convert_valuell(number[i]);
-            // printf("dec: %d|",nvalue);
-            // printf("exp: %d|",exp);
-            // printf("poww: %lli|",poww(16,exp));
-            // printf("conta: %lli\n",nvalue*poww(16,exp));
             nresult += (nvalue)*poww(16, exp);
             exp--;
         }
@@ -380,30 +315,21 @@ long long ato_c2decimal(char *number)
     /*
     converte um número decimal para complemento de 2
     */
-    // printf("NUMBER: %s\n", number);
-    // printf("ENTREI NO C2\n");
     char sign = check_sign(number);
-
-    // printf("sign %c\n", sign);
 
     long long diff, aux, result;
     if (char_is_bigger(number) && sign == 'p')
     {
-        // printf("ISBIGGER\n");
         aux = atoll(number);
         diff = aux - 2147483648;
-        // printf("DIFF: %lli", diff);
         result = -2147483648 + diff;
         return result;
     }
     else if (char_is_lower(number) && sign == 'n')
     {
         aux = atoll(number);
-        //printf("aux: %lli\n", aux);
         diff = aux + 2147483648;
         result = 2147483648 + diff;
-        //printf("result: %lli\n", result);
-        //printf("--------------------\n");
         return result;
     }
 
@@ -416,52 +342,27 @@ long long c2to_decimal(char *number)
     /*
     converte um número c2 para decimal
     */
-    
-    //printf("------------------------------\n");
-    //printf("ENTREI NO C2\n");
-    
-    //printf("NUMBER: %s\n", number);
     char sign = check_sign(number);
 
-    //printf("sign %c\n", sign);
-
     long long diff, aux, result;
-    // if (char_is_bigger(number) && sign == 'p') {
-    //     //printf("ISBIGGER\n");
-    //     aux = atoll(number);
-    //     diff = aux - 2147483648;
-    //     // printf("DIFF: %lli", diff);
-    //     result = -2147483648 + diff;
-    //     return result;
-    // }
-    //else 
     if (sign == 'n') {
         aux = atoll(number);
-        //printf("aux: %lli\n", aux);
         diff = aux + 2147483648;
         result = 2147483648 + diff;
-        //printf("result: %lli\n", result);
-        //printf("--------------------\n");
         return result;
     }
-    //printf("estou aqui\n");
     result = atoll(number);
-    //printf("result\n");
     return result;
 }
 
 long long change_endianness(long long number) {
-    //
-    //receber um unsigned int e mudar seu endianness
-    //
+    /*
+    receber um unsigned int e mudar seu endianness
+    */
     char binary[33];
 
-    //printf("im in\n");
-    
     to_binary(number,binary);
-    //printf("number: %lli\n", number);
-    //printf("binary: %s\n", binary);
-
+    
     //completar 32 bits
     char aux[33];
     int j;
@@ -480,7 +381,6 @@ long long change_endianness(long long number) {
         strcopy(aux,binary);
     }
     aux[32] = '\0';
-    //printf("bits completos: %s\n", aux);
     
     //inverter bytes
     int ini = 24, fim = 31;
@@ -490,36 +390,22 @@ long long change_endianness(long long number) {
     for (int k=0; k<4; k++) {
         for (int i=ini; i<=fim; i++) {
             binary[j] = aux[i];
-            //byte[b]   = aux[i];
             j++;
-            //b++;
-            //printf("i: %d ", i);
         }   
-        //byte[8] = '\0';
-        //printf("     byte: %s\n", byte);
-        //b = 0;
         ini -= 8;
         fim -= 8;
     }
     binary[32] = '\0';
-    //printf("bits invertidos: %s\n", binary);
-
+    
     //converter para decimal
     long long exp = 31;
     long long result=0;
     long long bit;
     for (int i=0; i<strleng(binary); i++) {
         bit = binary[i] - '0';
-        //printf("-------------------------\n");
-        //printf(" bit: %lli |", bit);
-        //printf(" exp: %lli", exp);
-        //printf(" poww: %lli", poww(2,exp));
         result += bit*poww(2,exp);
-        //printf("result: %lli\n", result);
-        //printf("-------------------------\n");
         exp--;
     }
-    //printf("result: %lli\n", result);
     return result;
 }
 
@@ -528,30 +414,21 @@ void to_hex(long long number, char *vresult)
 {
     int vaux[50]; 
     int i = 0;
-    //printf("ENTREI\n");
-    //printf("number: %lli\n", number);
     vresult[0] = '0';
     vresult[1] = 'x';
     while (number > 0)
     {
-        //printf("--------------------------------------\n");
-        //printf("numberper16: %lli\n", number%16);
         vaux[i] = number%16;
-        //printf("vaux[i] = %d " , vaux[i]);
         number /= 16;
         i++;
-        //printf("number: %lli\n", number);
-        //printf("--------------------------------------\n");
-   }
-    //printf("\n");
+    }
     // inverter resposta
     int k = 2;
     for (int j = i - 1; j >= 0; j--) {
-        //printf("reconvert value: %c\n", reconvert_value(vaux[i]));
         vresult[k] = reconvert_value(vaux[j]);
         k++;
     }
-    vresult[k] = '\0';
+    //printf("vresult: %s\n", vresult);
 }
 
 
@@ -574,34 +451,26 @@ void to_octal(long long number, char *vresult)
         vresult[k] = vaux[j];
         k++;
     }
-    vresult[k] = '\0';
 }
 
 
 int main()
 {
-    
     char number[40];
+
+    /* Read up to 20 bytes from the standard input into the str buffer */
+    scanf("%s", number);
+
     char base = 'a'; 
     char dresult[40], bresult[40], hexresult[40], oresult[40],resposta1[40], resposta2[40], resposta3[40], aux[40];
-    char init[4];
-    long c2dresult, c2result;
-    long invdresult=0;
+    char init[40] = {'a','a','a','a','\0'};
+    long long c2dresult, c2result;
+
+    long long invdresult=0;
+
     int j = 2;
 
-    //ler entrada
-    scanf("%s", number);
- 
-    // int n = read(STDIN_FD, number, 40);
-    // write(STDOUT_FD, init, 4);
     //inicializar
-    for (int i = 0; i<3; i++) {
-        init[i] = 'a';
-    }
-    init[3] = '\0';
-    
-    // write(STDOUT_FD, init, 4);
-
     strcopy(dresult, init);
     strcopy(bresult, init);
     strcopy(hexresult, init);
@@ -611,10 +480,11 @@ int main()
     strcopy(resposta3, init);
     strcopy(aux, init);
     base = check_base(number);
-    
+
     // converter hexadecimal para um numero decimal nao assinado
     ato_decimal(number, base, dresult);
-    //printf("%s\n", dresult);
+    printf("%s\n", dresult);
+
     // converter o numero decimal para a representacao em unsigned
     c2dresult = c2to_decimal(dresult);
     
@@ -627,18 +497,16 @@ int main()
         resposta1[j] = bresult[i];
         j++;
     }
-
     // converter para complemento de 2
     c2result = ato_c2decimal(dresult);
     
     //change endianness
-    //printf("c2drseult: %lli\n", c2dresult);
     invdresult = change_endianness(c2dresult);
     lltoa(invdresult, resposta3);
 
     //valor em hexadecimal
     to_hex(c2dresult, hexresult);
-
+    //printf("%s", hexresult);
     //valor em octal
     to_octal(c2dresult, oresult);
    
@@ -646,39 +514,34 @@ int main()
          lltoa(-c2result,aux);
          resposta2[0] = '-';
          j=1;
-        //  printf("aux: %s\n",aux);
          for (int i=0; i<strleng(aux); i++) {
             resposta2[j] = aux[i];
             j++;
-            // printf("aux: %s\n",aux);
         }
-    //     resposta2[j] = '\0';
     }
     else if (c2result >= 0) {
         lltoa(c2result, resposta2);
     }
     
-    //write(STDOUT_FD, resposta1, strleng(resposta1)+1);
-    // write(STDOUT_FD, resposta2, strleng(resposta2)+1);
-    // write(STDOUT_FD, resposta3, strleng(resposta3)+1);
-    // write(STDOUT_FD, hexresult, strleng(hexresult)+1);
-    // write(STDOUT_FD, oresult, strleng(oresult)+1);
-
-
-    // printf("%c\n", base);
-    // printf("dresult: %s\n", dresult);
+    
+    resposta1[strleng(resposta1)] = '\0';
+    
+    resposta2[strleng(resposta2)] = '\0';
+    
+    resposta3[strleng(resposta3)] = '\0';
+    
+    hexresult[strleng(hexresult)] = '\0';
+    
+    oresult[strleng(oresult)] = '\0';
+    
     printf("%s", resposta1);
+    printf("\n");
     printf("%s", resposta2);
+    printf("\n");
     printf("%s", resposta3);
+    printf("\n");
     printf("%s", hexresult);
+    printf("\n");
     printf("%s", oresult);
     return 0;
 }
-
-
-
-// void _start()
-// {
-//   int ret_code = main();
-//   exit(ret_code);
-// }
