@@ -54,8 +54,11 @@ void print(int numero) {
     int aux1=0, aux2=0, qtd=0;
     char digitos[40];
 
-    if (numero == -2147483648) {
+
+    if (numero == -2147483648) { 
         write(STDOUT_FD, "-2147483648\n", 12);
+        //aqui é preciso setar manualmente pois nao é possivel fazer
+        //aux1 = -numero nesse caso;
     }
     else if (numero ==0) {
         write(STDOUT_FD, "0\n", 12);
@@ -134,7 +137,7 @@ char check_base(char *number)
 
 int convert_value(char letter)
 {
-    char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     long i = 0;
     for (i = 0; i < 16; i++)
     {
@@ -362,7 +365,7 @@ void print_octal (int numero) {
 
 int main() {
     char entrada[40], base, sign;
-    int resposta2, twocomp, decimal, n, x=100;
+    int  twocomp, decimal, n, x=100;
     unsigned int resposta3=0;
     n = read(STDIN_FD, entrada, 40);
     
@@ -376,8 +379,7 @@ int main() {
     ////resposta1
         print_binary(decimal);
     ////resposta2
-        resposta2 = decimal;
-        print(resposta2);
+        print(decimal);
     //resposta3
         resposta3 = change_endiannes(decimal);
         printui(resposta3);
