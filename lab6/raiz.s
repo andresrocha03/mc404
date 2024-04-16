@@ -82,8 +82,8 @@ read:
 
 write:
     li a0, 1            # file descriptor = 1 (stdout)
-    la a1, t1           # buffer
-    li a2, result       # size - Writes 20 bytes.
+    la a1, result           # buffer
+    li a2, 20       # size - Writes 20 bytes.
     li a7, 64           # syscall write (64)
     ecall
     ret
@@ -180,4 +180,5 @@ loop_save:
     sb t4, 0(s1)    # escrever digito em result na ordem inversa   
     addi s1, s1, -1
 
-lab_save: ret
+lab_save: 
+    ret
