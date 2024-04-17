@@ -2,7 +2,6 @@
 
 _start:
     jal main
-    
     li a0, 0
     li a7, 93 # exit
     ecall
@@ -12,15 +11,16 @@ _start:
 main:
     addi sp,sp,-4
     sw ra, 0(sp)
-    # ponteiro para a resposta 
+    # regitradores para o input e resposta 
     la s1, result
 
     # parametros do for
     li s2, 0    # i = 0 
     li s3, 4    # limite do for
   
-    # salvei o input em s0
+    # salvei o input em a1
     jal read
+    mv s0, a1
 
     loop_main:
         bge s2, s3, lab_main # if i < 4
@@ -31,7 +31,7 @@ main:
         jal to_decimal 
 
         # calcular raiz quadrada
-        //jal sqrt 
+        jal sqrt 
 
         # salvar resposta em result
         jal save
@@ -55,7 +55,7 @@ main:
 read:
 
     li a0, 0            # file descriptor = 0 (stdin)
-    la s0, input_address# buffer
+    la a1, input_address# buffer
     li a2, 20           # size - Reads 20 bytes.
     li a7, 63           # syscall read (63)
     ecall
@@ -100,9 +100,13 @@ to_decimal:
     li t5, 1
     mul a3, a3, t5
     
-    add a0, a0, a1
-    add a0, a0, a2
-    add a0, a0, a3
+    li a5, 0
+    add a5, a5, a0
+    add a5, a5, a1
+    add a5, a5, a2
+    add a5, a5, a3
+    li a0, 0
+    mv a0, a5
     ret
 
 sqrt:
@@ -132,30 +136,30 @@ save:
     # salva um inteiro em result, como uma string no formato DDDD
     # input: numero inteiro armazenado em a0, ponteiro para result armazenado em s1
     # output: resultado salvo em result
-
+    //li a0, 0
     li t5, 10 
     
     li t3, 1000 # divisor
     div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao por 1000
+    rem a0, a0, t3  # guardar resto da divisao 
     addi t4, t4, 48 # converter para string
     sb t4, 0(s1)    # escrever digito em result na ordem inversa   
 
     li t3, 100   
     div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao por 1000
+    rem a0, a0, t3  # guardar resto da divisao 
     addi t4, t4, 48 # converter para string
     sb t4, 1(s1)    # escrever digito em result na ordem inversa   
     
     li t3, 10
     div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao por 1000
+    rem a0, a0, t3  # guardar resto da divisao 
     addi t4, t4, 48 # converter para string
     sb t4, 2(s1)    # escrever digito em result na ordem inversa   
     
     li t3, 1
     div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao por 1000
+    rem a0, a0, t3  # guardar resto da divisao 
     addi t4, t4, 48 # converter para string
     sb t4, 3(s1)    # escrever digito em result na ordem inversa   
     
@@ -167,3 +171,6 @@ input_address: .skip 0x20  # buffer
 result: .skip 0x20
 
 # 0400 5337 2240 9166
+# 1708 9816 8519 4815
+# 0529 0087 0173 0597
+# 0628 0279 0803 0508
