@@ -46,7 +46,9 @@ main:
 
         j loop_main
 
-    lab_main: 
+    lab_main:
+        li t1, 10
+        sb t1, 4(s1)
         jal write
         lw ra,0(sp)
         addi sp, sp, 4
@@ -137,7 +139,7 @@ save:
     # input: numero inteiro armazenado em a0, ponteiro para result armazenado em s1
     # output: resultado salvo em result
     //li a0, 0
-    li t5, 10 
+    li t5, 32
     
     li t3, 1000 # divisor
     div t4, a0, t3  # retirar um digito do numero e guardar o quociente
