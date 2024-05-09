@@ -12,44 +12,42 @@ main:
     addi sp,sp,-4
     sw ra, 0(sp)
 
-    # ler entrada 
-    
+    # ler coordenadas 
     li a2, 12           # size - reads 12 bytes
     jal read
     mv s0, a1           # coord
-
-    li a2, 20           # size - reads 20 bytes
-    jal read
-    mv s1, a1           # TR, TA, TA, TB, TC
-
-   
-    mv s2, a0
-
     # obter numeros inteiros a partir da entrada
         # Xc
-        jal get_coord 
-        mv s2, a0
+    jal get_coord 
+    mv s2, a0
         # Yb
-        addi s0, 6 # atualizar ponteiros
-        jal get_coord 
-        mv s3, a0
+    addi s0, s0, 5 # atualizar ponteiros
+    jal get_coord 
+    mv s3, a0
+    
+    # ler tempos
+    debug:
+    li a2, 20          # size - reads 20 bytes
+    jal read
+    mv s0, a1           # TR, TA, TA, TB, TC   
         # Tr
-        mv s0,s1 # mover de s1 para s0, apenas para reaproveitar as funcoes...
-        jal get_time
-        mv s4, a0
+    addi s0, s0,-1
+    jal get_time
+    mv s4, a0
         # Ta
-        addi s0,5
-        jal get_time
-        mv s5, a0
+    addi s0, s0, 5
+    jal get_time
+    mv s5, a0
         # Tb
-        addi s0,5
-        jal get_time
-        mv s6, a0
+    addi s0, s0, 5
+    jal get_time
+    mv s6, a0
         # Tc
-        addi s0,5
-        jal get_time
-        mv s7, a0
+    addi s0, s0, 5
+    jal get_time
+    mv s7, a0
 
+    debug5:
     li t1, 3
     li t2, 10
     # calcular Da : (tr - ta) * 3/ 10
@@ -81,33 +79,27 @@ main:
     mul t5, s2, s2 # Xc²
     mul t6, s9, s9 # dc²
     li t3, 2
-    mul t2, t3, xc # 2xc
+    mul t2, t3, s2 # 2xc
     add s11, t1, t5
     sub s11, s11, t6
     div s11, s11, t2
 
-    # salvar resposta em result
+    # salvar resposta em result (s1)
+    la s1, result
     mv a0, s11
     jal save
 
-    # atualizar ponteiro do input
-    addi s0, s0, 5  # s1 <= &input_addres[s0] + 5 
+    addi s1, s1, 5
+    mv a0, s10
+    jal save
+     
+    jal write
+    li t4, 10
+    sb t4, 5(s1)    # escrever digito em result 
 
-    # atualizar ponteiro do result
-    addi s1, s1, 5  # s1 <= &result[s1] + 5 
-
-    addi s2, s2, 1
-
-    j loop_main
-
-    lab_main:
-        li t1, 10
-        la s1, result
-        sb t1, 19(s1)
-        jal write
-        lw ra,0(sp)
-        addi sp, sp, 4
-        ret
+    lw ra,0(sp)
+    addi sp, sp, 4
+    ret
 
 read:
 
@@ -119,10 +111,10 @@ read:
     ret 
 
 write:
-    li a0, 1            # file descriptor = 1 (stdout)
+    li a0, 1                # file descriptor = 1 (stdout)
     la a1, result           # buffer
-    li a2, 20       # size - Writes 20 bytes.
-    li a7, 64           # syscall write (64)
+    li a2, 20               # size - Writes 20 bytes.
+    li a7, 64               # syscall write (64)
     ecall
     ret
 
@@ -146,6 +138,7 @@ to_decimal:
     addi a3, a3, -48
     addi a4, a4, -48
     
+    
     # multiplicar pelas potencias de 10
     li t5, 1000
     mul a1, a1, t5
@@ -156,15 +149,17 @@ to_decimal:
     li t5, 1
     mul a4, a4, t5
     
+
     li a5, 0
     add a5, a5, a1
     add a5, a5, a2
     add a5, a5, a3
     add a5, a5, a4
+    
     li t1, 45
     bne a0, t1, endif
         li t1, -1
-        mul a5, a5, a1
+        mul a5, a5, t1
     endif:
         li a0, 0
         mv a0, a5
@@ -192,79 +187,82 @@ get_time:
     # retorna numero inteiro em a0
     addi sp,sp,-4
     sw ra, 0(sp)
-
+    debug1:
     # obter os digitos da string salva em s0, salva-los em a0 (sinal), a1, a2, a3, a4
     li a0, 43
     jal get_digit
-
+    debug2:
     # get int number from 4 str and save it in a0
     jal to_decimal 
-
+    debug3:
     lw ra,0(sp)
     addi sp, sp, 4
     ret
 
-sqrt:
+# sqrt:
     # calcular raiz
     # input: numero decimal salvo em a0
     # output: raiz quadrada aproximada em a0
-    li t1, 0    # i do for
-    li t2, 21   # limite do for
-    li t3, 0    # y/k
-    li t4, 0    # k 
-    li t5, 2    
+#     li t1, 0    # i do for
+#     li t2, 21   # limite do for
+#    li t3, 0    # y/k
+#    li t4, 0    # k 
+#    li t5, 2    
     
-    div t4, a0, t5 # k = y/2
-    loop_sqrt:
-        bge t1, t2, lab_sqrt    # Sai do laço se i >= 21
-        div t3, a0, t4          # y/k
-        add t4, t4, t3          # k + y/k
-        div t4, t4, t5          # (k + y/k)/2
-        addi t1, t1, 1          # i <= i+1
-        j loop_sqrt
+#    div t4, a0, t5 # k = y/2
+#    loop_sqrt:
+#        bge t1, t2, lab_sqrt    # Sai do laço se i >= 21
+#        div t3, a0, t4          # y/k
+#        add t4, t4, t3          # k + y/k
+#        div t4, t4, t5          # (k + y/k)/2
+#        addi t1, t1, 1          # i <= i+1
+#        j loop_sqrt
 
-    lab_sqrt:
-        mv a0, t4
-        ret
+#    lab_sqrt:
+#        mv a0, t4
+#        ret
+
 
 save:
-    # salva um inteiro em result, como uma string no formato DDDD
+    # salva um inteiro em result, como uma string no formato SDDDD
     # input: numero inteiro armazenado em a0, ponteiro para result armazenado em s1
     # output: resultado salvo em result
-    # verificar 
-    li a, 0
-    li t5, 32
-    
-    li t3, 1000 # divisor
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
+
+    li t1, 0
+    li t4, 43
+    bge t1, t4, menor # verificar se é maior ou igual que 0
+        li t4, 45
+    menor:
+    sb t4, 0(s1)
+
+    li t3, 1000     # divisor
+    divu t4, a0, t3  # retirar um digito do numero e guardar o quociente
     rem a0, a0, t3  # guardar resto da divisao 
     addi t4, t4, 48 # converter para string
-    sb t4, 0(s1)    # escrever digito em result   
+    sb t4, 1(s1)    # escrever digito em result   
 
     li t3, 100   
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao 
-    addi t4, t4, 48 # converter para string
-    sb t4, 1(s1)    # escrever digito em result    
-    
-    li t3, 10
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
+    divu t4, a0, t3  # retirar um digito do numero e guardar o quociente
     rem a0, a0, t3  # guardar resto da divisao 
     addi t4, t4, 48 # converter para string
     sb t4, 2(s1)    # escrever digito em result    
     
-    li t3, 1
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
+    li t3, 10
+    divu t4, a0, t3  # retirar um digito do numero e guardar o quociente
     rem a0, a0, t3  # guardar resto da divisao 
     addi t4, t4, 48 # converter para string
-    sb t4, 3(s1)    # escrever digito em result 
-
-    sb t5, 4(s1)
+    sb t4, 3(s1)    # escrever digito em result    
+    
+    li t3, 1
+    divu t4, a0, t3  # retirar um digito do numero e guardar o quociente
+    rem a0, a0, t3  # guardar resto da divisao 
+    addi t4, t4, 48 # converter para string
+    sb t4, 4(s1)    # escrever digito em result 
+    
+    
     ret
 
 .bss
 input_address: .skip 0x20  # buffer
 result: .skip 0x20
 
-
-# 
