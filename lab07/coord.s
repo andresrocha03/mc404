@@ -61,16 +61,19 @@ main:
     mul s9, s9, t1
     div s9, s9, t2
 
-    # calcular y
+    # calcular y = ()
     mul t1, s8, s8 # da²
     mul t2, s3, s3 # yb²
     mul t3, s9, s9 # db²
+    
     li t5, 2
     mul t4, t5, s3
     add s10, t1, t2
     sub s10, s10, t3
     div s10, s10, t4
 
+    li t1, 3
+    li t2, 10
     # calcular Dc
     sub s9, s4, s7
     mul s9, s9, t1
@@ -78,6 +81,7 @@ main:
 
 
     # calcular x = (da²+xc²-dc²)/(2xc)
+    mul t1, s8, s8 # da²
     mul t5, s2, s2 # Xc²
     mul t6, s9, s9 # dc²
     li t3, 2
