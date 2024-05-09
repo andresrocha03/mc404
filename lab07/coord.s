@@ -18,15 +18,16 @@ main:
     mv s0, a1           # coord
     # obter numeros inteiros a partir da entrada
         # Xc
+    lercoord:
     jal get_coord 
     mv s2, a0
         # Yb
-    addi s0, s0, 5 # atualizar ponteiros
+    addi s0, s0, 6 # atualizar ponteiros
     jal get_coord 
     mv s3, a0
     
     # ler tempos
-    debug:
+    lertempo:
     li a2, 20          # size - reads 20 bytes
     jal read
     mv s0, a1           # TR, TA, TA, TB, TC   
@@ -47,7 +48,7 @@ main:
     jal get_time
     mv s7, a0
 
-    debug5:
+    endleitura:
     li t1, 3
     li t2, 10
     # calcular Da : (tr - ta) * 3/ 10
@@ -60,11 +61,6 @@ main:
     mul s9, s9, t1
     div s9, s9, t2
 
-    # calcular Dc
-    sub s9, s4, s7
-    mul s9, s9, t1
-    div s9, s9, t2
-
     # calcular y
     mul t1, s8, s8 # da²
     mul t2, s3, s3 # yb²
@@ -74,6 +70,12 @@ main:
     add s10, t1, t2
     sub s10, s10, t3
     div s10, s10, t4
+
+    # calcular Dc
+    sub s9, s4, s7
+    mul s9, s9, t1
+    div s9, s9, t2
+
 
     # calcular x = (da²+xc²-dc²)/(2xc)
     mul t5, s2, s2 # Xc²
@@ -88,15 +90,17 @@ main:
     la s1, result
     mv a0, s11
     jal save
+    li t1, 32
+    sb t1, 5(s1)
 
-    addi s1, s1, 5
+    addi s1, s1, 6
     mv a0, s10
     jal save
-     
-    jal write
     li t4, 10
     sb t4, 5(s1)    # escrever digito em result 
 
+    jal write
+   
     lw ra,0(sp)
     addi sp, sp, 4
     ret
@@ -129,7 +133,7 @@ get_digit:
 
 to_decimal:
     # converter uma string para um numero decimal
-    # input: 4 caracteres em a0, a1, a2, a3
+    # input: 4 caracteres em a1, a2, a3, a4
     # output: numero inteiro em a0
     
     # converter string para int
@@ -148,7 +152,7 @@ to_decimal:
     mul a3, a3, t5
     li t5, 1
     mul a4, a4, t5
-    
+    endmul:
 
     li a5, 0
     add a5, a5, a1
@@ -161,7 +165,6 @@ to_decimal:
         li t1, -1
         mul a5, a5, t1
     endif:
-        li a0, 0
         mv a0, a5
     ret
 
@@ -174,10 +177,10 @@ get_coord:
     # obter os digitos da string salva em s0, salvos em a0 (sinal), a1, a2, a3, a4
     lbu a0, 0(s0) # get sign
     jal get_digit
-
+    # endgetdigit:
     # get int number from 4 str and save it in a0
     jal to_decimal 
-
+    endtodecimal:
     lw ra,0(sp)
     addi sp, sp, 4
     ret
@@ -187,41 +190,17 @@ get_time:
     # retorna numero inteiro em a0
     addi sp,sp,-4
     sw ra, 0(sp)
-    debug1:
+    //debug1:
     # obter os digitos da string salva em s0, salva-los em a0 (sinal), a1, a2, a3, a4
     li a0, 43
     jal get_digit
-    debug2:
+    //debug2:
     # get int number from 4 str and save it in a0
     jal to_decimal 
-    debug3:
+    //  debug3:
     lw ra,0(sp)
     addi sp, sp, 4
     ret
-
-# sqrt:
-    # calcular raiz
-    # input: numero decimal salvo em a0
-    # output: raiz quadrada aproximada em a0
-#     li t1, 0    # i do for
-#     li t2, 21   # limite do for
-#    li t3, 0    # y/k
-#    li t4, 0    # k 
-#    li t5, 2    
-    
-#    div t4, a0, t5 # k = y/2
-#    loop_sqrt:
-#        bge t1, t2, lab_sqrt    # Sai do laço se i >= 21
-#        div t3, a0, t4          # y/k
-#        add t4, t4, t3          # k + y/k
-#        div t4, t4, t5          # (k + y/k)/2
-#        addi t1, t1, 1          # i <= i+1
-#        j loop_sqrt
-
-#    lab_sqrt:
-#        mv a0, t4
-#        ret
-
 
 save:
     # salva um inteiro em result, como uma string no formato SDDDD
@@ -230,31 +209,35 @@ save:
 
     li t1, 0
     li t4, 43
-    bge t1, t4, menor # verificar se é maior ou igual que 0
+    bge a0, t1, menor # verificar se é maior ou igual que 0
         li t4, 45
+        li t1, -1
+        mul a0, a0, t1  # operar numero positivo na conversao para string
     menor:
     sb t4, 0(s1)
 
+    
+    
     li t3, 1000     # divisor
-    divu t4, a0, t3  # retirar um digito do numero e guardar o quociente
+    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
     rem a0, a0, t3  # guardar resto da divisao 
     addi t4, t4, 48 # converter para string
     sb t4, 1(s1)    # escrever digito em result   
 
     li t3, 100   
-    divu t4, a0, t3  # retirar um digito do numero e guardar o quociente
+    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
     rem a0, a0, t3  # guardar resto da divisao 
     addi t4, t4, 48 # converter para string
     sb t4, 2(s1)    # escrever digito em result    
     
     li t3, 10
-    divu t4, a0, t3  # retirar um digito do numero e guardar o quociente
+    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
     rem a0, a0, t3  # guardar resto da divisao 
     addi t4, t4, 48 # converter para string
     sb t4, 3(s1)    # escrever digito em result    
     
     li t3, 1
-    divu t4, a0, t3  # retirar um digito do numero e guardar o quociente
+    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
     rem a0, a0, t3  # guardar resto da divisao 
     addi t4, t4, 48 # converter para string
     sb t4, 4(s1)    # escrever digito em result 
