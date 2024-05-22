@@ -15,7 +15,6 @@ main:
     # abrir arquivo e salvar em a0
     jal open
 
-
     # ler colunas e linhas 
     jal read
     mv s0, a1 # salvar conteudo do arquivo em s0
@@ -23,6 +22,11 @@ main:
     # iterar cabecalho
     jal iterate_heading
     
+    mv t1, a1
+    # set canvas size
+    jal set_canvas_size
+    mv a1, t1
+
     # iterar matriz e setar pixels no canvas
     jal iterate_matrix
    
@@ -49,13 +53,12 @@ read:
    
     ret 
 
-write:
-    li a0, 1                # file descriptor = 1 (stdout)
-    la a1, result           # buffer
-    li a2, 20               # size - Writes 20 bytes.
-    li a7, 64               # syscall write (64)
-    ecall
+set_canvas_size:
+    mv a0, t1
+    mv a1, t1
+    li a7, 2200
     ret
+
     
 iterate_heading:
     # iterar cabecalho do arquivo salvo em s0
@@ -64,10 +67,11 @@ iterate_heading:
 
     lbu a1, 0(s0)
     lbu a2, 1(s0)
+    lbu a3, 2(s0)
     li t1, 10
     
     beq a2, t1, if # se o valor de colunas só possui um digito
-    bne a2, t1, else # se o valor de colunas possui dois digitos
+    bne a2, t1, else # se o valor de colunas possui pelo menos dois digitos
 
     if:
         # é preciso somar 7 em s0
@@ -76,17 +80,37 @@ iterate_heading:
         addi a1, a1, -48
 
     else:
-        # converter numero de string para int
-        addi a1, a1, -48
-        addi a2, a2, -48
-        li t1, 10 
-        mul a1, a1, t1
-        li t1, 1
-        mul a2, a2, t1  
-        add a1, a1, a2
+        beq a3, t1, dois_digitos # o valor so possui dois digitos
+        bne a3, t1, tres_digitos # o valor possui tres digitos
+        dois_digitos:
+            # converter numero de string para int
+            addi a1, a1, -48
+            addi a2, a2, -48
+            li t1, 10 
+            mul a1, a1, t1
+            li t1, 1
+            mul a2, a2, t1  
+            add a1, a1, a2
 
-        # é preciso somar 9 em s0
-        addi s0, s0, 9
+            # é preciso somar 9 em s0
+            addi s0, s0, 9
+        tres_digitos:
+            # converter numero de string para int
+            addi a1, a1, -48
+            addi a2, a2, -48
+            addi a3, a3, -48
+            li t1, 100 
+            mul a1, a1, t1
+            li t1, 10
+            mul a2, a2, t1  
+            li t1, 1
+            mul a1, a1, t1
+            
+            add a1, a1, a2
+            add a1, a1, a3
+
+            # é preciso somar 9 em s0
+            addi s0, s0, 11            
     ret
 
 iterate_matrix:
@@ -95,14 +119,32 @@ iterate_matrix:
 
     mul a1, a1, a1 # obter numero de elementos
 
-    li t1, 0
+    la t5, a2_input
+    li t1, 0 # i
+    li t2, 0 # x
+    li t3, 0 # y
+    li t6, 255 # alfa
+
     loop_matrix:
         beq t1, a1, endloop
-        
+        lb t4, 0(s0) # salvei o valor rgb da matriz
+        # set pixel 
+            # x e y
+        mv a0, t2 
+        mv a1, t3
+            # salvar RGB e ALFA     
+        lb t4, 0(t5)
+        lb t4, 1(t5)
+        lb t4, 2(t5)
+        lb t6, 3(t5) 
+        LW a2, a2_input
 
-    j loop_matrix
+        li a7, 2200
+
+        j loop_matrix
+
     endloop:
-
+    ret
 
     
 
@@ -152,5 +194,5 @@ save:
 
 .bss
 input_address: .skip 262159  # buffer
-a2_address: .skip 0x32
+a2_input: .skip 0x32
 
