@@ -37,11 +37,10 @@ main:
         # ponteiro apontando para o alfa
     jal read_alfa
     
-    mv t1, a1
+   
     # set canvas size
     jal set_canvas_size
-    mv a1, t1
-
+   
     # iterar matriz e setar pixels no canvas
     jal iterate_matrix
    
@@ -60,16 +59,16 @@ open:
 read:
 
     la a1, input_address
-    li a2, 262159            # size - reads 262159 bytes
+    li a2, 262159      # size - reads 262159 bytes
     li a7, 63           # syscall read (63)
     ecall
-   
     ret 
 
 set_canvas_size:
-    mv a0, s1
-    mv a1, s2
-    li a7, 2200
+    mv a0, s2
+    mv a1, s1
+    li a7, 2201
+    ecall
     ret
 
     
@@ -131,21 +130,23 @@ read_alfa:
     
     lbu t2, 0(s0)
     lbu t3, 1(s0)
+    lbu t4, 2(s0)
 
     beq t3, t1, alfaumdigito
     bne t3, t1, elsealfa
     
+
     alfaumdigito:
         # é preciso somar 2 em s0
         addi s0,s0, 2
-        # numero de linhas ou colunas salvos em a1
+        # alfa em a0
         mv a0, t2
         addi a0, a0, -48
         j contalfa
     
     elsealfa:
-        beq t3, t1, alfadoisdigitos # o valor so possui dois digitos
-        bne t3, t1, alfatresdigitos # o valor possui tres digitos
+        beq t4, t1, alfadoisdigitos # o valor so possui dois digitos
+        bne t4, t1, alfatresdigitos # o valor possui tres digitos
         alfadoisdigitos:
             # converter numero de string para int
             addi t2, t2, -48
@@ -161,7 +162,6 @@ read_alfa:
             j contalfa
 
         alfatresdigitos:
-            lbu t4, 2(s0)
             # converter numero de string para int
             addi t2, t2, -48
             addi t3, t3, -48
@@ -184,43 +184,41 @@ read_alfa:
         ret
 
 
-    ret
-
 iterate_matrix:
     # iterar matriz a partir do ponteiro salvo em s0, numero de linhas e colunas salvo em a1
     # 
 
-    mul a1, s1, s2 # obter numero de elementos
-
-    la t5, a2_input
     li t1, 0 # i
-    li a3, 0 # j
+    li t0, 0 # j
     li t2, 0 # x
     li t3, 0 # y
-    li t6, 255 # alfa
 
 
     loop_matrix:
         beq t1, s2, endloop
-        li a3, 0
+        li t0, 0
         loop_colums:
-            beq a3, s1, endloopcolums 
+            beq t0, s1, endloopcolums 
+            li a2, 0x00000000
             lbu t4, 0(s0) # salvei o valor rgb da matriz
 
+            slli t5, t4, 8 
+            slli t6, t4, 16
+            slli t4, t4, 24 
+            
+            add a2, a2, t4
+            add a2, a2, t5
+            add a2, a2, t6
+            addi a2, a2, 255 # alfa
             # set pixel 
                 # x e y
-            mv a0, a3 
+            mv a0, t0 
             mv a1, t1
                 # salvar RGB e ALFA     
-            sb t4, 3(t5)
-            sb t4, 2(t5)
-            sb t4, 1(t5)
-            sb t6, 0(t5) 
-            LW a2, a2_input
-
             li a7, 2200
             ecall
-            addi a3, a3, 1
+            # atualizar iteradores
+            addi t0, t0, 1
             addi s0, s0, 1
             j loop_colums
         
@@ -233,7 +231,7 @@ iterate_matrix:
 .bss
 
 input_address: .skip 0x4000F# buffer
-a2_input: .skip 0x32
+
 
 .data 
 input_file: .asciz "image.pgm"
