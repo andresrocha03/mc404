@@ -19,8 +19,23 @@ main:
     jal read
     mv s0, a1 # salvar conteudo do arquivo em s0
 
+
     # iterar cabecalho
+    addi s0, s0, 3
+    lbu a1, 0(s0)
+    lbu a2, 1(s0)
+    lbu a3, 2(s0)
     jal iterate_heading
+    mv s1, a1
+
+    lbu a1, 0(s0)
+    lbu a2, 1(s0)
+    lbu a3, 2(s0)
+    jal iterate_heading
+    mv s2, a1
+    
+        # ponteiro apontando para o alfa
+    jal read_alfa
     
     mv t1, a1
     # set canvas size
@@ -40,12 +55,10 @@ open:
     li a2, 0             # mode
     li a7, 1024          # syscall open 
     ecall
-    input_file: .asciz "image.pgm"
 
 
 read:
 
-    li a0, 0            # file descriptor = 0 (stdin)
     la a1, input_address
     li a2, 262159            # size - reads 262159 bytes
     li a7, 63           # syscall read (63)
@@ -54,30 +67,26 @@ read:
     ret 
 
 set_canvas_size:
-    mv a0, t1
-    mv a1, t1
+    mv a0, s1
+    mv a1, s2
     li a7, 2200
     ret
 
     
 iterate_heading:
-    # iterar cabecalho do arquivo salvo em s0
+    # iterar colunas, linhas e alfa do arquivo salvo em s0
     # devolve numero de colunas e linhas em a1 e ponteiro para inicio da matriz em s0
-    addi s0, s0, 3
-
-    lbu a1, 0(s0)
-    lbu a2, 1(s0)
-    lbu a3, 2(s0)
-    li t1, 10
+    li t1, 32
     
     beq a2, t1, if # se o valor de colunas só possui um digito
     bne a2, t1, else # se o valor de colunas possui pelo menos dois digitos
 
     if:
-        # é preciso somar 7 em s0
-        addi s0,s0, 7
-        # numero de linhas e colunas salvos em a1
+        # é preciso somar 2 em s0
+        addi s0,s0, 2
+        # numero de linhas ou colunas salvos em a1
         addi a1, a1, -48
+        j cont
 
     else:
         beq a3, t1, dois_digitos # o valor so possui dois digitos
@@ -92,8 +101,9 @@ iterate_heading:
             mul a2, a2, t1  
             add a1, a1, a2
 
-            # é preciso somar 9 em s0
-            addi s0, s0, 9
+            # é preciso somar 3 em s0
+            addi s0, s0, 3
+            j cont
         tres_digitos:
             # converter numero de string para int
             addi a1, a1, -48
@@ -109,90 +119,121 @@ iterate_heading:
             add a1, a1, a2
             add a1, a1, a3
 
-            # é preciso somar 9 em s0
-            addi s0, s0, 11            
+            # é preciso somar 4 em s0
+            addi s0, s0, 4            
+    cont:
+        ret
+
+read_alfa:
+    # ponteiro para o alfa em s0
+    # valor de alfa em a0
+    li t1, 10
+    
+    lbu t2, 0(s0)
+    lbu t3, 1(s0)
+
+    beq t3, t1, alfaumdigito
+    bne t3, t1, elsealfa
+    
+    alfaumdigito:
+        # é preciso somar 2 em s0
+        addi s0,s0, 2
+        # numero de linhas ou colunas salvos em a1
+        mv a0, t2
+        addi a0, a0, -48
+        j contalfa
+    
+    elsealfa:
+        beq t3, t1, alfadoisdigitos # o valor so possui dois digitos
+        bne t3, t1, alfatresdigitos # o valor possui tres digitos
+        alfadoisdigitos:
+            # converter numero de string para int
+            addi t2, t2, -48
+            addi t3, t3, -48
+            li t1, 10 
+            mul t2, t2, t1
+            li t1, 1
+            mul t3, t3, t1  
+            add a0, t2, t3
+
+            # é preciso somar 3 em s0
+            addi s0, s0, 3
+            j contalfa
+
+        alfatresdigitos:
+            lbu t4, 2(s0)
+            # converter numero de string para int
+            addi t2, t2, -48
+            addi t3, t3, -48
+            addi t4, t4, -48
+            
+            li t1, 100 
+            mul t2, t2, t1
+            li t1, 10
+            mul t3, t3, t1  
+            li t1, 1
+            mul t4, t4, t1
+            
+            add a0, t2, t3
+            add a0, a0, t4
+
+            # é preciso somar 4 em s0
+            addi s0, s0, 4            
+
+    contalfa:
+        ret
+
+
     ret
 
 iterate_matrix:
     # iterar matriz a partir do ponteiro salvo em s0, numero de linhas e colunas salvo em a1
     # 
 
-    mul a1, a1, a1 # obter numero de elementos
+    mul a1, s1, s2 # obter numero de elementos
 
     la t5, a2_input
     li t1, 0 # i
+    li a3, 0 # j
     li t2, 0 # x
     li t3, 0 # y
     li t6, 255 # alfa
 
+
     loop_matrix:
-        beq t1, a1, endloop
-        lb t4, 0(s0) # salvei o valor rgb da matriz
-        # set pixel 
-            # x e y
-        mv a0, t2 
-        mv a1, t3
-            # salvar RGB e ALFA     
-        lb t4, 0(t5)
-        lb t4, 1(t5)
-        lb t4, 2(t5)
-        lb t6, 3(t5) 
-        LW a2, a2_input
+        beq t1, s2, endloop
+        li a3, 0
+        loop_colums:
+            beq a3, s1, endloopcolums 
+            lbu t4, 0(s0) # salvei o valor rgb da matriz
 
-        li a7, 2200
+            # set pixel 
+                # x e y
+            mv a0, a3 
+            mv a1, t1
+                # salvar RGB e ALFA     
+            sb t4, 3(t5)
+            sb t4, 2(t5)
+            sb t4, 1(t5)
+            sb t6, 0(t5) 
+            LW a2, a2_input
 
+            li a7, 2200
+            ecall
+            addi a3, a3, 1
+            addi s0, s0, 1
+            j loop_colums
+        
+        endloopcolums:
+        addi t1, t1, 1
         j loop_matrix
-
     endloop:
     ret
 
-    
-
-
-save:
-    # salva um inteiro em result, como uma string no formato SDDDD
-    # input: numero inteiro armazenado em a0, ponteiro para result armazenado em s1
-    # output: resultado salvo em result
-
-    li t1, 0
-    li t4, 43
-    bge a0, t1, menor # verificar se é maior ou igual que 0
-        li t4, 45
-        li t1, -1
-        mul a0, a0, t1  # operar numero positivo na conversao para string
-    menor:
-    sb t4, 0(s1)
-
-    
-    
-    li t3, 1000     # divisor
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao 
-    addi t4, t4, 48 # converter para string
-    sb t4, 1(s1)    # escrever digito em result   
-
-    li t3, 100   
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao 
-    addi t4, t4, 48 # converter para string
-    sb t4, 2(s1)    # escrever digito em result    
-    
-    li t3, 10
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao 
-    addi t4, t4, 48 # converter para string
-    sb t4, 3(s1)    # escrever digito em result    
-    
-    li t3, 1
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao 
-    addi t4, t4, 48 # converter para string
-    sb t4, 4(s1)    # escrever digito em result 
-    
-    
-    ret
-
 .bss
-input_address: .skip 262159  # buffer
+
+input_address: .skip 0x4000F# buffer
 a2_input: .skip 0x32
 
+.data 
+input_file: .asciz "image.pgm"
