@@ -36,6 +36,7 @@ main:
     
         # ponteiro apontando para o alfa
     jal read_alfa
+    mv s3, a0
     
    
     # set canvas size
