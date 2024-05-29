@@ -22,23 +22,17 @@ main:
 
     # iterar cabecalho
     addi s0, s0, 3
-    lbu a1, 0(s0)
-    lbu a2, 1(s0)
-    lbu a3, 2(s0)
+   
     jal iterate_heading
     mv s1, a1
 
-    lbu a1, 0(s0)
-    lbu a2, 1(s0)
-    lbu a3, 2(s0)
     jal iterate_heading
     mv s2, a1
     
-        # ponteiro apontando para o alfa
+    # ponteiro apontando para o alfa
     jal read_alfa
     mv s3, a0
     
-   
     # set canvas size
     jal set_canvas_size
    
@@ -56,9 +50,7 @@ open:
     li a7, 1024          # syscall open 
     ecall
 
-
 read:
-
     la a1, input_address
     li a2, 262159      # size - reads 262159 bytes
     li a7, 63           # syscall read (63)
@@ -66,8 +58,8 @@ read:
     ret 
 
 set_canvas_size:
-    mv a0, s2
-    mv a1, s1
+    mv a0, s1
+    mv a1, s2
     li a7, 2201
     ecall
     ret
@@ -76,9 +68,16 @@ set_canvas_size:
 iterate_heading:
     # iterar colunas, linhas e alfa do arquivo salvo em s0
     # devolve numero de colunas e linhas em a1 e ponteiro para inicio da matriz em s0
-    li t1, 32
     
+    li t1, 32 # barra de espaco
+    li t2, 10 # \n
+    
+    lbu a1, 0(s0)
+    lbu a2, 1(s0)
+    lbu a3, 2(s0)
+
     beq a2, t1, if # se o valor de colunas só possui um digito
+    beq a2, t2, if # se o valor de colunas só possui um digito
     bne a2, t1, else # se o valor de colunas possui pelo menos dois digitos
 
     if:
@@ -86,10 +85,11 @@ iterate_heading:
         addi s0,s0, 2
         # numero de linhas ou colunas salvos em a1
         addi a1, a1, -48
-        j cont
+        ret
 
     else:
         beq a3, t1, dois_digitos # o valor so possui dois digitos
+        beq a3, t2, dois_digitos # se o valor de colunas possui dois digito
         bne a3, t1, tres_digitos # o valor possui tres digitos
         dois_digitos:
             # converter numero de string para int
@@ -103,7 +103,7 @@ iterate_heading:
 
             # é preciso somar 3 em s0
             addi s0, s0, 3
-            j cont
+            ret
         tres_digitos:
             # converter numero de string para int
             addi a1, a1, -48
@@ -121,8 +121,7 @@ iterate_heading:
 
             # é preciso somar 4 em s0
             addi s0, s0, 4            
-    cont:
-        ret
+            ret
 
 read_alfa:
     # ponteiro para o alfa em s0
