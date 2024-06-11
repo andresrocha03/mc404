@@ -19,6 +19,15 @@ main:
    
     jal to_decimal
 
+    li a1, 0
+    la search_node, head_node
+    jal find_node
+
+    la s1, result
+    jal save
+
+    jal write
+    
     lw ra,0(sp)
     addi sp, sp, 4
     ret
@@ -40,7 +49,7 @@ write:
 
 to_decimal:
     # converter uma string para um numero decimal
-    # input: endereco da string em a0
+    # input: endereco da string em S0
     # output: numero inteiro em a0
     
     # converter string para int
@@ -71,13 +80,35 @@ to_decimal:
     end_loop_decimal:
         ret
 
+find_node:
+    # recebe search_node e um inteiro em a0
+    # devolve o search_node com o endereco do resultado e o numero do nó em a1
+
+    
+    beq t4, a0, found
+    beq search_node
+
+    lw t1, search_node
+    lw t2, search_node
+    lw t3, search_node
+
+    add t1, t2
+    add t1, t3
+    add t4, t1
+
+    lw search_node, search_node
+    addi a1, a1, 1
+    j find_node
+    
+    found:
+        ret
 
 save:
-    # salva um inteiro em result, como uma string no formato DDDD
-    # input: numero inteiro armazenado em a0, ponteiro para result armazenado em s1
+    # salva um inteiro em result, como uma string
+    # input: numero inteiro armazenado em a1, ponteiro para result armazenado em s1
     # output: resultado salvo em result
-    //li a0, 0
-    li t5, 32
+    
+    li t5, 10
     
     li t3, 1000 # divisor
     div t4, a0, t3  # retirar um digito do numero e guardar o quociente
@@ -106,10 +137,18 @@ save:
     sb t5, 4(s1)
     ret
 
+write:
+    li a0, 1                # file descriptor = 1 (stdout)
+    la a1, result           # buffer
+    li a2, 20               # size - Writes 20 bytes.
+    li a7, 64               # syscall write (64)
+    ecall
+    ret
 
 
 .bss
 
 input_address: .skip 0x10 # buffer
 result: .skip 0x10
+search_node: .skip 0x
 
