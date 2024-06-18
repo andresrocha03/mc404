@@ -1,13 +1,15 @@
 .globl _start
 
+
+.text
+
+
 _start:
     jal main
     li a0, 0
     li a7, 93 # exit
     ecall
 
-
-.text
 
 main:
     addi sp,sp,-4
@@ -19,8 +21,9 @@ main:
    
     jal to_decimal
 
-    li a1, 0
-    la search_node, head_node
+    la t4, head_node
+    li t1, 10001
+    li a1, -1
     jal find_node
 
     la s1, result
@@ -47,60 +50,75 @@ write:
     ecall
     ret
 
+
 to_decimal:
     # converter uma string para um numero decimal
-    # input: endereco da string em S0
+    # input: endereco da string em s0
     # output: numero inteiro em a0
     
     # converter string para int
-    li t1, 10 // \n
-    li t4, 1 //multiplicador
-    mv s0, 0
-    loop_decimal: 
+    li t1, 10 # \n
+    li t4, 1 # multiplicador
+    li a0, 0
+    
+    lbu t2, 0(s0)
+    li t3, 45 #  -
+   
+    bne t2, t3, positivo
+    li t4, -1
+    addi s0, s0, 1
+    lbu t2, 0(s0)
+    addi t2, t2, -48
+    addi s0, s0, 1
+
+    positivo:
+        addi t2, t2, -48
+        add a0, a0, t2
+        addi s0, s0, 1
         lbu t2, 0(s0)
         addi s0, s0, 1
+
+    loop_decimal: 
         beq t2, t1, end_loop_decimal
 
-        li t3, 95 // -
-        beq t2, t3, negativo
-        bne t2, t3, positivo
+        addi t2, t2, -48
+        mul a0, a0, t1
+        add a0, t2, a0
 
-        negativo:
-            li t4, -1
-            lbu t2, 0(s0)
-            addi s0, s0, 1
+        lbu t2, 0(s0)
+        addi s0, s0, 1
 
-        positivo:
-            addi t2, t2, -48
-            mul t2, t2, t1
-            mul s0, s0, t1
-            add s0, t2
         j loop_decimal
     
     end_loop_decimal:
+        mul a0, a0, t4
         ret
 
 find_node:
-    # recebe search_node e um inteiro em a0
-    # devolve o search_node com o endereco do resultado e o numero do nó em a1
+    # recebe endereco em t4 e um inteiro em a0
+    # devolve o numero do nó em a1
 
+    beq t1, a0, found
+   
+    li a2, 0
+    beq t4, a2, no_result_found
     
-    beq t4, a0, found
-    beq search_node
+    lw t1, 0(t4)
+    lw t2, 4(t4)
+    lw t3, 8(t4)
 
-    lw t1, search_node
-    lw t2, search_node
-    lw t3, search_node
+    add t1, t2, t1
+    add t1, t3, t1
 
-    add t1, t2
-    add t1, t3
-    add t4, t1
-
-    lw search_node, search_node
+    lw t4, 12(t4)
     addi a1, a1, 1
     j find_node
     
     found:
+        ret
+    
+    no_result_found:
+        li a1, -1
         ret
 
 save:
@@ -108,47 +126,43 @@ save:
     # input: numero inteiro armazenado em a1, ponteiro para result armazenado em s1
     # output: resultado salvo em result
     
+    
     li t5, 10
+    li t6, 0
+    li t3, -1
     
-    li t3, 1000 # divisor
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao 
-    addi t4, t4, 48 # converter para string
-    sb t4, 0(s1)    # escrever digito em result na ordem inversa   
+    bne a1, t3, loop_save
+    no_result:
+        li t4, 45
+        sb t4, 0(s1)
+        li t4, 49
+        sb t4, 1(s1)
+        sb t5, 2(s1)
+        ret
+    mv t4, a1
 
-    li t3, 100   
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao 
-    addi t4, t4, 48 # converter para string
-    sb t4, 1(s1)    # escrever digito em result na ordem inversa   
+    li t2, 0
+    loop_save:    
+        div t4, t4, t5  # retirar um digito do numero e guardar o quociente
+        addi t2, t2,  1
+        beq t4, t6, end_loop_save
+        j loop_save
     
-    li t3, 10
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao 
-    addi t4, t4, 48 # converter para string
-    sb t4, 2(s1)    # escrever digito em result na ordem inversa   
+    li t1, 0
+    end_loop_save:
+        beq t1, t2, end_all
+        div t4, a1, t5  # retirar um digito do numero e guardar o quociente
+        rem a1, a1, t5  # guardar resto da divisao 
+        addi t4, t4, 48 # converter para string
+        sb t4, 0(s1)    # escrever digito em result na ordem inversa   
+        addi s1, s1, 1
+        addi t1, t1, 1
+        j end_loop_save
     
-    li t3, 1
-    div t4, a0, t3  # retirar um digito do numero e guardar o quociente
-    rem a0, a0, t3  # guardar resto da divisao 
-    addi t4, t4, 48 # converter para string
-    sb t4, 3(s1)    # escrever digito em result na ordem inversa   
-    
-    sb t5, 4(s1)
-    ret
-
-write:
-    li a0, 1                # file descriptor = 1 (stdout)
-    la a1, result           # buffer
-    li a2, 20               # size - Writes 20 bytes.
-    li a7, 64               # syscall write (64)
-    ecall
-    ret
-
+    end_all:
+        ret
 
 .bss
 
 input_address: .skip 0x10 # buffer
 result: .skip 0x10
-search_node: .skip 0x
-
