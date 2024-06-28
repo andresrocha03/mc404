@@ -62,7 +62,33 @@ atoi:
 recursive_tree_search:
     //root node em a0
     //val em a1
-    
+
+    search_value:
+        addi sp, sp, -4
+        sb ra, 0(sp)
+        
+        lw t1, 0(a0)
+        beq t1, a1, found_result
+        
+        //go left
+        addi sp, sp, -4
+        sw a0, 0(sp)
+
+        lw a0, 4(a0) //left
+        beq a0, zero, direita
+        
+        jal search_value
+
+    direita:
+        lw t1, 0(sp)
+        lw a0, 8(t1) //filho direito do pai
+        beq
+        jal search_value
+
+    nulo:
+        
+    found_result:
+
 
 
 
