@@ -95,7 +95,10 @@ find_node:
     search_loop:
         lw t1, 0(a1)
         lw t2, 4(a1)
-        lw t3, 8(a1)
+          li t1, 10
+    sb t1, 0(t5) # add newline
+    addi t2, t2, 1 # increment size
+  lw t3, 8(a1)
 
         add t1, t2, t1
         add t1, t3, t1
