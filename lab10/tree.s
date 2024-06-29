@@ -15,8 +15,10 @@ gets:
     sw ra, 0(sp)
     
     mv a1, a0
+    mv a0, zero
     jal read
     
+    mv a0, a1
     lw ra, 0(sp)
     addi sp, sp, 4
     ret
@@ -60,46 +62,64 @@ atoi:
     ret
 
 recursive_tree_search:
-    //root node em a0
-    //val em a1
+    // a0: endereço do nó raiz
+    // a1: valor a ser procurado
+    
+    li a2, 0       // a2 é usado para contar a profundidade
+    addi sp, sp, -4
+    sw ra, 0(sp)  // Salva o ra
+    mv s0, sp
+    li t3, 0
 
-    search_value:
-        addi sp, sp, -4
-        sb ra, 0(sp)
-        
-        lw t1, 0(a0)
-        beq t1, a1, found_result
-        
-        //go left
-        addi sp, sp, -4
-        sw a0, 0(sp)
+search_loop:
+    sw ra, -4(sp)  // Salva o ra
+    sw a0, -8(sp)  // Salva no atual
+    addi sp, sp, -8
 
-        lw a0, 4(a0) //left
-        beq a0, zero, direita
-        
-        jal search_value
-
+    lw t1, 0(a0)   // t1 = valor no nó atual
+    addi a2, a2, 1  // Incrementa a profundidade
+    beq t1, a1, found  // Se encontrou o valor, vai para 'found'
+   
+    // Busca à esquerda
+    lw t2, 4(a0)    // t2 = endereço do filho à esquerda
+    beq t2, zero, direitamv
+    lw a0, 4(a0)
+    jal search_loop // Se t2 != 0, continua a busca à esquerda
+   
+    // Busca à direita
     direita:
-        lw t1, 0(sp)
-        lw a0, 8(t1) //filho direito do pai
-        beq
-        jal search_value
-
+    lw t2, 8(a0)    // t2 = endereço do filho à direita
+    beq t2, zero, nulo 
+    lw a0, 8(a0)
+    jal search_loop // Se t2 != 0, continua a busca à direita
+    
     nulo:
-        
-    found_result:
+    addi a2, a2, -1
+    addi sp, sp, 4
+    lw ra, 0(sp)
+    lw a0, 4(sp)
+    addi sp, sp, 4
+    ret
 
-
+found:
+    mv a0, a2  // Move a profundidade encontrada para a0
+    mv sp, s0
+    lw ra, 0(sp)
+    ret
 
 
 itoa:
     //valor a ser convertido em a0
     //buffer a ser preenchido em a1
     //base 10 em a2 
-   
     // se a0 for 0, nao foi encontrado nenhum no
+   
+    mv s0, a1
     bne a0, zero, yes_result
-        sb zero, 0(a1)
+        li t1, 48
+        sb t1, 0(a1)
+        li t1, 10
+        sb t1, 1(a1)
         ret
    
     yes_result: 
@@ -110,7 +130,6 @@ itoa:
         div t1, t1, t3  # retirar um digito do numero e guardar o quociente
         addi t2, t2,  1 // contabilizar o digito
         beq t1, zero, end_contagem
-        beq t1, t3, end_contagem
         j conta_digito
 
     // numero de digitos esta salvo em t2
@@ -145,14 +164,13 @@ itoa:
         j loop_save
     
     end_all:
-    sb zero, 0(a1)
-    mv a0, a1
+    li t1, 10
+    sb t1, 0(a1) 
+    mv a0, s0
     ret
-
 
 puts:
     //recebe string em a0
-
     addi sp, sp, -4
     sw ra, 0(sp)
 
@@ -163,23 +181,20 @@ puts:
     conta_char:    
         lbu t4, 0(t1)
         addi t2, t2, 1 // contabilizar o digito
-        addi t1, t1, 1
-        beq t4, zero, end_contac
+        addi t1, t1, 1 //avançar ponteiro
         beq t4, t3, end_contac 
-        j conta_digito
+        j conta_char
 
     end_contac:
     
+    mv a1, a0
     mv a2, t2
-    sb t3, 0(t1)
+    
     jal write
 
     lw ra, 0(sp)
     addi sp, sp, 4
     ret
-
-
-
 
 read:
     //la a1, input_address
